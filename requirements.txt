@@ -1,57 +1,58 @@
-APScheduler==3.11.1
-argcomplete==3.1.4
-argon2-cffi==23.1.0
-argon2-cffi-bindings==25.1.0
-asgiref==3.10.0
-blinker==1.7.0
-certifi==2025.10.5
-cffi==2.0.0
-charset-normalizer==3.4.4
-colorama==0.4.6
-conan==2.21.0
-cryptography==41.0.7
-dbus-python==1.3.2
-distro==1.8.0
-dj-database-url==3.0.1
+# Core Django
 Django==4.2.11
-django-apscheduler==0.6.2
-django-cors-headers==4.3.1
-django-filter==23.5
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.1
-et_xmlfile==2.0.0
-fasteners==0.20
+django-cors-headers==4.3.1
+django-filter==23.5
+django-apscheduler==0.6.2
+
+# Production Server & Database
 gunicorn==23.0.0
-httplib2==0.20.4
-idna==3.11
-Jinja2==3.1.6
-launchpadlib==1.11.0
-lazr.restfulclient==0.14.6
-lazr.uri==1.0.6
-Markdown==3.5.2
-MarkupSafe==3.0.3
-oauthlib==3.2.2
-openpyxl==3.1.2
-packaging==24.0
-patch-ng==1.18.1
-pillow==10.2.0
 psycopg2-binary==2.9.9
-pycparser==2.23
-PyGObject==3.48.2
-PyJWT==2.7.0
-pyparsing==3.1.1
-python-apt==2.7.7+ubuntu5
-python-dateutil==2.9.0.post0
-python-decouple==3.8
-pytz==2024.1
-PyYAML==6.0.1
-requests==2.32.5
-six==1.16.0
-sqlparse==0.5.3
-toml==0.10.2
-tzlocal==5.3.1
-urllib3==2.5.0
-wadllib==1.3.6
+dj-database-url==3.0.1
 whitenoise==6.11.0
-xmltodict==0.13.0
-yq==3.1.0
+
+# Configuration & Environment
+python-decouple==3.8
+
+# Scheduling
+APScheduler==3.11.1
+
+# Security & Authentication
+cryptography==41.0.7
+argon2-cffi==23.1.0
+argon2-cffi-bindings==25.1.0
+PyJWT==2.7.0
+
+# Image Processing
+pillow==10.2.0
+
+# Excel Support
+openpyxl==3.1.2
+
+# Utilities
+python-dateutil==2.9.0.post0
+pytz==2024.1
+tzlocal==5.3.1
+requests==2.32.5
+certifi==2025.10.5
+urllib3==2.5.0
+idna==3.11
+six==1.16.0
+
+# Templates & Rendering
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+Markdown==3.5.2
+
+# Database & ORM
+sqlparse==0.5.3
+asgiref==3.10.0
+
+# Other
+packaging==24.0
+PyYAML==6.0.1
+blinker==1.7.0
+cffi==2.0.0
+pycparser==2.23
+charset-normalizer==3.4.4
