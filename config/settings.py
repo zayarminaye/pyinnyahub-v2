@@ -5,6 +5,8 @@ Configured for scalability and easy transition from development to production.
 from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
+import dj_database_url
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files efficiently in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS must be before CommonMiddleware
     'django.middleware.common.CommonMiddleware',
@@ -79,22 +82,35 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DATABASE_ENGINE = config('DATABASE_ENGINE', default='django.db.backends.sqlite3')
-
-if DATABASE_ENGINE == 'django.db.backends.sqlite3':
+# Production: Use DATABASE_URL from Render/Railway/Heroku
+# Development: Use SQLite
+if 'DATABASE_URL' in os.environ:
+    # Production database (Render, Railway, Heroku provide this)
     DATABASES = {
-        'default': {
-            'ENGINE': DATABASE_ENGINE,
-            'NAME': BASE_DIR / config('DATABASE_NAME', default='db.sqlite3'),
-        }
+        'default': dj_database_url.config(
+            default=os.environ['DATABASE_URL'],
+            conn_max_age=600,  # Connection pooling - keep connections alive for 10 minutes
+            conn_health_checks=True,  # Verify connections are healthy before using
+        )
     }
 else:
-    # PostgreSQL configuration (for future scaling)
-    DATABASES = {
-        'default': {
-            'ENGINE': DATABASE_ENGINE,
-            'NAME': config('DATABASE_NAME'),
-            'USER': config('DATABASE_USER'),
+    # Development database
+    DATABASE_ENGINE = config('DATABASE_ENGINE', default='django.db.backends.sqlite3')
+
+    if DATABASE_ENGINE == 'django.db.backends.sqlite3':
+        DATABASES = {
+            'default': {
+                'ENGINE': DATABASE_ENGINE,
+                'NAME': BASE_DIR / config('DATABASE_NAME', default='db.sqlite3'),
+            }
+        }
+    else:
+        # PostgreSQL configuration (for local development with PostgreSQL)
+        DATABASES = {
+            'default': {
+                'ENGINE': DATABASE_ENGINE,
+                'NAME': config('DATABASE_NAME'),
+                'USER': config('DATABASE_USER'),
             'PASSWORD': config('DATABASE_PASSWORD'),
             'HOST': config('DATABASE_HOST', default='localhost'),
             'PORT': config('DATABASE_PORT', default='5432'),
@@ -133,6 +149,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+
+# WhiteNoise - Efficient static file serving in production
+# Compresses files and caches them for faster loading
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (User uploads)
 MEDIA_URL = '/media/'
