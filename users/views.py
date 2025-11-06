@@ -525,6 +525,31 @@ def apply_instructor_view(request):
             messages.info(request, "သင့်လျှောက်ထားမှုကို စိစစ်နေဆဲဖြစ်ပါသည်။")
             return redirect('dashboard')
 
+    # Check for rejected applications - they can edit and resubmit
+    rejected_application = InstructorApplication.objects.filter(
+        user=request.user,
+        status='rejected'
+    ).order_by('-created_at').first()
+
+    rejection_context = {}
+    form_data = {}
+
+    if rejected_application:
+        rejection_context = {
+            'was_rejected': True,
+            'rejection_reason': rejected_application.rejection_reason,
+            'rejected_at': rejected_application.reviewed_at,
+            'application_id': rejected_application.id,
+        }
+        # Pre-fill form with existing data for editing
+        if request.method == 'GET':
+            form_data = {
+                'expertise': rejected_application.expertise,
+                'experience': rejected_application.experience,
+                'education': rejected_application.education or '',
+                'motivation': rejected_application.motivation or '',
+            }
+
     if request.method == 'POST':
         # Get form data matching actual model fields
         expertise = request.POST.get('expertise', '').strip()
@@ -534,7 +559,7 @@ def apply_instructor_view(request):
         resume = request.FILES.get('resume')
         certificates = request.FILES.get('certificates')
 
-        # Preserve form data
+        # Preserve form data for error display
         form_data = {
             'expertise': expertise,
             'experience': experience,
@@ -553,17 +578,32 @@ def apply_instructor_view(request):
         if errors:
             for error in errors:
                 messages.error(request, error)
-            return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+            context = {'form_data': form_data, **rejection_context}
+            return render(request, 'users/apply_instructor.html', context)
 
-        # Create application
+        # Update rejected application or create new one
         try:
-            application = InstructorApplication.objects.create(
-                user=request.user,
-                expertise=expertise,
-                experience=experience,
-                education=education if education else '',
-                motivation=motivation if motivation else '',
-            )
+            if rejected_application:
+                # Update existing rejected application
+                application = rejected_application
+                application.expertise = expertise
+                application.experience = experience
+                application.education = education if education else ''
+                application.motivation = motivation if motivation else ''
+                application.status = 'pending'  # Reset to pending for re-review
+                application.rejection_reason = None  # Clear old rejection reason
+                application.reviewed_by = None  # Clear reviewer
+                application.reviewed_at = None  # Clear review time
+                application.save()
+            else:
+                # Create new application
+                application = InstructorApplication.objects.create(
+                    user=request.user,
+                    expertise=expertise,
+                    experience=experience,
+                    education=education if education else '',
+                    motivation=motivation if motivation else '',
+                )
 
             # Save optional file uploads
             if resume:
@@ -572,7 +612,8 @@ def apply_instructor_view(request):
                     application.save()
                 except Exception as e:
                     messages.error(request, f"Resume ဖိုင် တင်ရာတွင် အမှား: {str(e)}")
-                    return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+                    context = {'form_data': form_data, **rejection_context}
+                    return render(request, 'users/apply_instructor.html', context)
 
             if certificates:
                 try:
@@ -580,9 +621,14 @@ def apply_instructor_view(request):
                     application.save()
                 except Exception as e:
                     messages.error(request, f"လက်မှတ် ဖိုင် တင်ရာတွင် အမှား: {str(e)}")
-                    return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+                    context = {'form_data': form_data, **rejection_context}
+                    return render(request, 'users/apply_instructor.html', context)
 
-            messages.success(request, "လျှောက်ထားမှု အောင်မြင်ပါသည်။ Admin မှ စိစစ်ပြီး အကြောင်းကြားပါမည်။")
+            # Show appropriate success message
+            if rejected_application:
+                messages.success(request, "လျှောက်ထားမှု ပြန်လည်တင်သွင်းပြီးပါပြီ။ Admin မှ ထပ်မံစိစစ်ပြီး အကြောင်းကြားပါမည်။")
+            else:
+                messages.success(request, "လျှောက်ထားမှု အောင်မြင်ပါသည်။ Admin မှ စိစစ်ပြီး အကြောင်းကြားပါမည်။")
             return redirect('dashboard')
         except ValidationError as e:
             # Validation errors from model validators
@@ -590,7 +636,8 @@ def apply_instructor_view(request):
             for field, msgs in (error_messages.items() if isinstance(error_messages, dict) else [('error', [error_messages])]):
                 for msg in (msgs if isinstance(msgs, list) else [msgs]):
                     messages.error(request, f"{field}: {msg}" if field != 'error' else msg)
-            return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+            context = {'form_data': form_data, **rejection_context}
+            return render(request, 'users/apply_instructor.html', context)
         except Exception as e:
             # Log the actual error for debugging
             import logging
@@ -607,6 +654,8 @@ def apply_instructor_view(request):
                 messages.error(request, f"ဖိုင်တင်ရာတွင် ပြဿနာရှိပါသည်: {error_message}")
             else:
                 messages.error(request, f"လျှောက်ထားမှု မအောင်မြင်ပါ: {error_message}")
-            return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+            context = {'form_data': form_data, **rejection_context}
+            return render(request, 'users/apply_instructor.html', context)
 
-    return render(request, 'users/apply_instructor.html')
+    context = {**rejection_context}
+    return render(request, 'users/apply_instructor.html', context)

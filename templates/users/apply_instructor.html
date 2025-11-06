@@ -11,6 +11,23 @@
                     <h2 class="text-center mb-2">ဆရာ/ဆရာမ ဖြစ်ရန် လျှောက်ထားမည်</h2>
                     <p class="text-center text-muted mb-4">သင်၏ အတွေ့အကြုံနှင့် ကျွမ်းကျင်မှုများကို မျှဝေပါ</p>
 
+                    {% if was_rejected %}
+                        <div class="alert alert-warning alert-permanent border-start border-warning border-4" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle-fill"></i> သင်၏လျှောက်ထားမှု ငြင်းပယ်ခံခဲ့ရပါသည်
+                            </h5>
+                            <hr>
+                            <p class="mb-2"><strong>Admin မှ ငြင်းပယ်သည့် အကြောင်းရင်း:</strong></p>
+                            <div class="bg-light p-3 rounded mb-3">
+                                <p class="mb-0 text-dark">{{ rejection_reason|default:"မဖော်ပြထားပါ" }}</p>
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-pencil-square"></i> <strong>သတိပြုရန်:</strong> သင်၏ လျှောက်ထားမှု အချက်အလက်များကို အောက်တွင် ပြသထားပါသည်။
+                                Admin ၏ မှတ်ချက်အရ ပြုပြင်ပြီး <strong>"လျှောက်ထားမည်"</strong> ခလုတ်ကို နှိပ်ခြင်းဖြင့် ပြန်လည်တင်သွင်းနိုင်ပါသည်။
+                            </div>
+                        </div>
+                    {% endif %}
+
                     {% if messages %}
                         {% for message in messages %}
                             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
