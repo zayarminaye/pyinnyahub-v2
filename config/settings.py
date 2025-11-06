@@ -73,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',  # For media files in templates
+                'core.context_processors.system_settings',  # Custom: System-wide settings
             ],
         },
     },

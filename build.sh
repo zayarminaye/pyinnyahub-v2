@@ -12,6 +12,9 @@ pip install -r requirements.txt
 echo "🗄️  Running database migrations..."
 python manage.py migrate
 
+echo "⚙️  Initializing system settings..."
+python manage.py init_system_settings
+
 echo "🗂️  Collecting static files..."
 python manage.py collectstatic --no-input
 
