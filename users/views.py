@@ -228,11 +228,21 @@ def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
+        remember = request.POST.get('remember')  # Get remember me checkbox
 
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
             login(request, user)
+
+            # Handle "Remember Me" functionality
+            if remember:
+                # Session expires in 2 weeks (1,209,600 seconds)
+                request.session.set_expiry(1209600)
+            else:
+                # Session expires when browser closes (default: 0)
+                request.session.set_expiry(0)
+
             messages.success(request, f"Welcome back, {user.get_full_name()}!")
 
             # Redirect based on role
