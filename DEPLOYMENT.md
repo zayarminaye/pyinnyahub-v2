@@ -4,6 +4,27 @@ Complete guide for deploying to free-tier hosting platforms.
 
 ---
 
+## 🎯 Quick Links to Detailed Guides
+
+**Choose your hosting platform:**
+
+- 🎨 **[Render](./DEPLOY_TO_RENDER.md)** - RECOMMENDED for beginners ⭐
+  - Complete step-by-step guide with troubleshooting
+  - Free tier: 750 hours/month + PostgreSQL (90 days)
+  - Best for production-ready apps
+
+- 🐍 **[PythonAnywhere](#-deploy-to-pythonanywhere)** - Easiest for learning
+  - Always free
+  - Manual setup via web interface
+  - Good for MVP/testing
+
+- 🚂 **[Railway](#-deploy-to-railway)** - Best for developers
+  - $5 credit/month
+  - Automatic PostgreSQL setup
+  - Advanced features
+
+---
+
 ## 📋 Table of Contents
 
 1. [Testing Locally](#testing-locally)
@@ -297,60 +318,50 @@ python manage.py collectstatic --noinput
 
 ## 🎨 Deploy to Render
 
-**750 FREE HOURS/MONTH**
+**750 FREE HOURS/MONTH** (Free tier includes PostgreSQL for 90 days)
 
-### Step 1: Prepare Files
+Render is recommended for production-ready apps with:
+- ✅ Free PostgreSQL database
+- ✅ Automatic SSL certificates
+- ✅ Easy GitHub integration
+- ✅ Auto-deploy on git push
+- ✅ Free custom domains
 
-```bash
-# Create build.sh
-cat > build.sh << 'EOF'
-#!/usr/bin/env bash
-set -o errexit
+### 📖 Complete Step-by-Step Guide
 
-pip install -r requirements.txt
-python manage.py collectstatic --noinput
-python manage.py migrate
-EOF
+**For detailed instructions with screenshots, troubleshooting, and FAQs:**
 
-chmod +x build.sh
-```
+👉 **See [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)**
 
-### Step 2: Create render.yaml
+### Quick Summary
 
-```yaml
-databases:
-  - name: pyinnyahub-db
-    databaseName: pyinnyahub
-    user: pyinnyahub
+1. **Install dependencies**: `pip install gunicorn psycopg2-binary whitenoise dj-database-url`
+2. **Create build.sh** file for deployment automation
+3. **Update settings.py** for production (DATABASE_URL, STATIC_ROOT, WhiteNoise)
+4. **Push to GitHub**
+5. **Create Render account** with GitHub
+6. **Create PostgreSQL database** (free tier)
+7. **Create web service** from GitHub repo
+8. **Set environment variables** (DATABASE_URL, SECRET_KEY, DEBUG, ALLOWED_HOSTS)
+9. **Deploy!** (3-5 minutes)
+10. **Create superuser** via Render Shell
 
-services:
-  - type: web
-    name: pyinnyahub-web
-    runtime: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application"
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: pyinnyahub-db
-          property: connectionString
-      - key: SECRET_KEY
-        generateValue: true
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: DEBUG
-        value: False
-```
+**✅ Your app is live!**
 
-### Step 3: Deploy
+### Your App URLs
 
-1. Go to https://render.com/
-2. Sign up with GitHub
-3. Click **New** → **Blueprint**
-4. Connect your repository
-5. Render auto-deploys!
+- **Homepage**: https://your-service-name.onrender.com/
+- **Admin Panel**: https://your-service-name.onrender.com/admin/
+- **API**: https://your-service-name.onrender.com/api/
 
-**✅ Your app is live on Render!**
+### Common Issues
+
+See [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md) for:
+- DisallowedHost errors
+- Static files not loading
+- Database connection issues
+- Build failures
+- And more...
 
 ---
 
