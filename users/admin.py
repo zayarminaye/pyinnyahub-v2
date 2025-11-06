@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import CustomUser, InstructorApplication
+from .models import User, InstructorApplication
 
 
-@admin.register(CustomUser)
-class CustomUserAdmin(BaseUserAdmin):
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
     """Admin interface for custom user model."""
     list_display = ('email', 'get_full_name', 'is_instructor', 'is_admin_user', 'is_active', 'date_joined')
     list_filter = ('is_instructor', 'is_admin_user', 'is_active', 'date_joined')
