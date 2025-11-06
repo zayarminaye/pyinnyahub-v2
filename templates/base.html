@@ -12,24 +12,35 @@
     <!-- Custom CSS -->
     <style>
         :root {
-            --primary-color: #4F46E5;
+            /* Professional, softer colors */
+            --primary-color: #6366F1;
+            --primary-hover: #4F46E5;
             --secondary-color: #10B981;
+            --secondary-hover: #059669;
             --dark-color: #1F2937;
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --card-bg: #ffffff;
-            --border-color: #e5e7eb;
+            --bg-color: #F9FAFB;
+            --text-color: #1F2937;
+            --card-bg: #FFFFFF;
+            --border-color: #E5E7EB;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --hero-gradient-start: #6366F1;
+            --hero-gradient-end: #8B5CF6;
         }
 
-        /* Dark mode colors */
+        /* Elegant dark mode colors */
         [data-theme="dark"] {
-            --primary-color: #6366F1;
+            --primary-color: #818CF8;
+            --primary-hover: #A5B4FC;
             --secondary-color: #34D399;
+            --secondary-hover: #6EE7B7;
             --dark-color: #111827;
-            --bg-color: #1F2937;
-            --text-color: #F9FAFB;
-            --card-bg: #374151;
-            --border-color: #4B5563;
+            --bg-color: #0F172A;
+            --text-color: #E2E8F0;
+            --card-bg: #1E293B;
+            --border-color: #334155;
+            --shadow: rgba(0, 0, 0, 0.4);
+            --hero-gradient-start: #3730A3;
+            --hero-gradient-end: #6B21A8;
         }
 
         body {
@@ -81,28 +92,33 @@
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
+            transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
-            background-color: #4338CA;
-            border-color: #4338CA;
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         .hero-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #7C3AED 100%);
+            background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
             color: white;
             padding: 80px 0;
         }
 
         .course-card {
-            transition: transform 0.3s;
-            border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px var(--shadow);
+            background-color: var(--card-bg);
         }
 
         .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px var(--shadow);
+            border-color: var(--primary-color);
         }
 
         .category-badge {
@@ -113,19 +129,35 @@
             text-decoration: none;
             display: inline-block;
             margin: 5px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
 
         .category-badge:hover {
-            background-color: #059669;
+            background-color: var(--secondary-hover);
             transform: scale(1.05);
+            box-shadow: 0 4px 8px var(--shadow);
         }
 
         footer {
-            background-color: var(--dark-color);
-            color: white;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border-top: 1px solid var(--border-color);
             padding: 40px 0 20px;
             margin-top: 80px;
+        }
+
+        footer a {
+            color: var(--text-color);
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        footer a:hover {
+            opacity: 1;
+        }
+
+        .alert {
+            border: 1px solid var(--border-color);
         }
 
         .notification-badge {
@@ -175,6 +207,10 @@
                                 <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> ပရိုဖိုင်</a></li>
                                 <li><a class="dropdown-item" href="{% url 'my_subscriptions' %}"><i class="bi bi-book"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</a></li>
                                 <li><a class="dropdown-item" href="{% url 'my_payments' %}"><i class="bi bi-credit-card"></i> ငွေပေးချေမှု မှတ်တမ်း</a></li>
+                                {% if not user.is_instructor %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'apply_instructor' %}"><i class="bi bi-mortarboard"></i> ဆရာ/ဆရာမ ဖြစ်ရန် လျှောက်ထားမည်</a></li>
+                                {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> ထွက်မည်</a></li>
                             </ul>
@@ -220,21 +256,21 @@
                 <div class="col-md-4 mb-3">
                     <h5>လင့်ခ်များ</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{% url 'course_list' %}" class="text-white-50">သင်ခန်းစာများ</a></li>
-                        <li><a href="#" class="text-white-50">အကြောင်းအရာ</a></li>
-                        <li><a href="#" class="text-white-50">ဆက်သွယ်ရန်</a></li>
+                        <li><a href="{% url 'course_list' %}">သင်ခန်းစာများ</a></li>
+                        <li><a href="#">အကြောင်းအရာ</a></li>
+                        <li><a href="#">ဆက်သွယ်ရန်</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-3">
                     <h5>ဆက်သွယ်ရန်</h5>
-                    <p class="text-white-50">
+                    <p style="opacity: 0.7">
                         <i class="bi bi-envelope"></i> support@pyinnyahub.com<br>
                         <i class="bi bi-telephone"></i> +95 9 123 456 789
                     </p>
                 </div>
             </div>
-            <hr class="bg-white">
-            <div class="text-center text-white-50">
+            <hr style="opacity: 0.2">
+            <div class="text-center" style="opacity: 0.7">
                 <p>&copy; 2025 Pyinnya Hub LMS. All rights reserved.</p>
             </div>
         </div>

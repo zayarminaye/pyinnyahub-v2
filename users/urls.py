@@ -19,6 +19,9 @@ urlpatterns = [
     path('dashboard/instructor/', views.instructor_dashboard_view, name='instructor_dashboard'),
     path('dashboard/admin/', views.admin_dashboard_view, name='admin_dashboard'),
 
+    # Instructor Application
+    path('apply-instructor/', views.apply_instructor_view, name='apply_instructor'),
+
     # Admin Approval Views
     path('admin/payment/<int:payment_id>/approve/', views.admin_approve_payment_view, name='admin_approve_payment'),
     path('admin/payment/<int:payment_id>/reject/', views.admin_reject_payment_view, name='admin_reject_payment'),

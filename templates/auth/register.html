@@ -9,21 +9,24 @@
             <div class="card shadow">
                 <div class="card-body p-5">
                     <h2 class="text-center mb-4">စာရင်းသွင်းမည်</h2>
-                    <form method="post">
+                    <form method="post" id="registerForm">
                         {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">နာမည်</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                <input type="text" class="form-control" id="first_name" name="first_name"
+                                       value="{{ form_data.first_name|default:'' }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="last_name" class="form-label">မျိုးနွယ်အမည်</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                <input type="text" class="form-control" id="last_name" name="last_name"
+                                       value="{{ form_data.last_name|default:'' }}" required>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">အီးမေးလ်</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   value="{{ form_data.email|default:'' }}" required>
                             <div class="form-text">သင့်အီးမေးလ်ကို အကောင့်ဝင်ရန် အသုံးပြုပါမည်</div>
                         </div>
                         <div class="mb-3">
@@ -34,6 +37,7 @@
                         <div class="mb-3">
                             <label for="password2" class="form-label">လျှို့ဝှက်နံပါတ် အတည်ပြုမည်</label>
                             <input type="password" class="form-control" id="password2" name="password2" required>
+                            <div id="passwordMatch" class="form-text"></div>
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="terms" required>
@@ -52,4 +56,48 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side password matching validation
+    const password = document.getElementById('password');
+    const password2 = document.getElementById('password2');
+    const passwordMatch = document.getElementById('passwordMatch');
+    const form = document.getElementById('registerForm');
+
+    function checkPasswordMatch() {
+        if (password2.value === '') {
+            passwordMatch.textContent = '';
+            passwordMatch.className = 'form-text';
+            return;
+        }
+
+        if (password.value === password2.value) {
+            passwordMatch.textContent = '✓ လျှို့ဝှက်နံပါတ် တူညီပါသည်';
+            passwordMatch.className = 'form-text text-success';
+            password2.classList.remove('is-invalid');
+            password2.classList.add('is-valid');
+        } else {
+            passwordMatch.textContent = '✗ လျှို့ဝှက်နံပါတ် မတူညီပါ';
+            passwordMatch.className = 'form-text text-danger';
+            password2.classList.remove('is-valid');
+            password2.classList.add('is-invalid');
+        }
+    }
+
+    password.addEventListener('input', checkPasswordMatch);
+    password2.addEventListener('input', checkPasswordMatch);
+
+    // Validate on form submit
+    form.addEventListener('submit', function(e) {
+        if (password.value !== password2.value) {
+            e.preventDefault();
+            passwordMatch.textContent = '✗ လျှို့ဝှက်နံပါတ် မတူညီပါ';
+            passwordMatch.className = 'form-text text-danger';
+            password2.classList.add('is-invalid');
+            password2.focus();
+        }
+    });
+</script>
 {% endblock %}

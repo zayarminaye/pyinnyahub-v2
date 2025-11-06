@@ -156,35 +156,65 @@ def register_view(request):
         return redirect('dashboard')
 
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        password2 = request.POST.get('password2', '')
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+
+        # Preserve form data for re-rendering on error
+        form_data = {
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name,
+        }
 
         # Validation
-        if password != password2:
-            messages.error(request, "Passwords don't match.")
-            return render(request, 'auth/register.html')
+        errors = []
 
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already registered.")
-            return render(request, 'auth/register.html')
+        # Check required fields
+        if not all([email, password, password2, first_name, last_name]):
+            errors.append("ကျေးဇူးပြု၍ အချက်အလက်အားလုံး ဖြည့်ပေးပါ။")
+
+        # Validate email format
+        if email and '@' not in email:
+            errors.append("အီးမေးလ် မှန်ကန်မှု မရှိပါ။")
+
+        # Check email already exists
+        if email and User.objects.filter(email=email).exists():
+            errors.append("ဤအီးမေးလ်ကို အသုံးပြုပြီးဖြစ်ပါသည်။")
+
+        # Validate password length
+        if password and len(password) < 8:
+            errors.append("လျှို့ဝှက်နံပါတ် အနည်းဆုံး ၈ လုံး ရှိရမည်။")
+
+        # Check passwords match
+        if password and password2 and password != password2:
+            errors.append("လျှို့ဝှက်နံပါတ် မတူညီပါ။")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'auth/register.html', {'form_data': form_data})
 
         # Create user
-        user = User.objects.create_user(
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name
-        )
+        try:
+            user = User.objects.create_user(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
 
-        # Send welcome email
-        from notifications.services import NotificationService
-        NotificationService.send_registration_confirmation(user)
+            # Send welcome email
+            from notifications.services import NotificationService
+            NotificationService.send_registration_confirmation(user)
 
-        messages.success(request, "Registration successful! Please login.")
-        return redirect('login')
+            messages.success(request, "စာရင်းသွင်းမှု အောင်မြင်ပါသည်။ ကျေးဇူးပြု၍ အကောင့်ဝင်ပါ။")
+            return redirect('login')
+        except Exception as e:
+            messages.error(request, f"စာရင်းသွင်းရာတွင် အမှားရှိပါသည်: {str(e)}")
+            return render(request, 'auth/register.html', {'form_data': form_data})
 
     return render(request, 'auth/register.html')
 
@@ -475,3 +505,69 @@ def admin_reject_instructor_view(request, application_id):
 
     context = {'application': application}
     return render(request, 'admin/reject_instructor.html', context)
+
+
+@login_required
+def apply_instructor_view(request):
+    """Student applies to become an instructor."""
+    # Check if user already has an application
+    existing_application = InstructorApplication.objects.filter(
+        user=request.user,
+        status__in=['pending', 'approved']
+    ).first()
+
+    if existing_application:
+        if existing_application.status == 'approved':
+            messages.info(request, "သင်သည် ဆရာ/ဆရာမအဖြစ် အတည်ပြုပြီးဖြစ်ပါသည်။")
+            return redirect('dashboard')
+        else:
+            messages.info(request, "သင့်လျှောက်ထားမှုကို စိစစ်နေဆဲဖြစ်ပါသည်။")
+            return redirect('dashboard')
+
+    if request.method == 'POST':
+        expertise = request.POST.get('expertise', '').strip()
+        years_of_experience = request.POST.get('years_of_experience')
+        bio = request.POST.get('bio', '').strip()
+        portfolio_url = request.POST.get('portfolio_url', '').strip()
+
+        # Preserve form data
+        form_data = {
+            'expertise': expertise,
+            'years_of_experience': years_of_experience,
+            'bio': bio,
+            'portfolio_url': portfolio_url,
+        }
+
+        # Validation
+        errors = []
+        if not all([expertise, years_of_experience, bio]):
+            errors.append("ကျေးဇူးပြု၍ အချက်အလက်အားလုံး ဖြည့်ပေးပါ။")
+
+        try:
+            years = int(years_of_experience)
+            if years < 0:
+                errors.append("အတွေ့အကြုံနှစ် မှန်ကန်မှု မရှိပါ။")
+        except (ValueError, TypeError):
+            errors.append("အတွေ့အကြုံနှစ် မှန်ကန်မှု မရှိပါ။")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+
+        # Create application
+        try:
+            InstructorApplication.objects.create(
+                user=request.user,
+                expertise=expertise,
+                years_of_experience=years_of_experience,
+                bio=bio,
+                portfolio_url=portfolio_url if portfolio_url else None
+            )
+            messages.success(request, "လျှောက်ထားမှု အောင်မြင်ပါသည်။ Admin မှ စိစစ်ပြီး အကြောင်းကြားပါမည်။")
+            return redirect('dashboard')
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+            return render(request, 'users/apply_instructor.html', {'form_data': form_data})
+
+    return render(request, 'users/apply_instructor.html')
