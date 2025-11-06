@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Pyinnya Hub LMS{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">မြန်မာနိုင်ငံအတွက် အကောင်းဆုံးသော သင်ကြားရေးစနစ်</h1>
+                <p class="lead mb-4">ကျွမ်းကျင်ဆရာများထံမှ တစ်ကမ္ဘာလုံးက သင်ခန်းစာများကို အွန်လိုင်းမှ တစ်ဆင့် လေ့လာနိုင်ပါသည်</p>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{% url 'course_list' %}" class="btn btn-light btn-lg">သင်ခန်းစာများကို လေ့လာမည်</a>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">စာရင်းသွင်းမည်</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://via.placeholder.com/500x400/4F46E5/FFFFFF?text=Online+Learning" class="img-fluid rounded" alt="Learning">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">သင်ခန်းစာအမျိုးအစားများ</h2>
+        <div class="text-center">
+            {% for category in categories %}
+                <a href="{% url 'course_list' %}?category={{ category.slug }}" class="category-badge">
+                    {{ category.icon }} {{ category.name }}
+                </a>
+            {% empty %}
+                <p class="text-muted">သင်ခန်းစာအမျိုးအစားများ မရှိသေးပါ</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">အထူးသင်ခန်းစာများ</h2>
+        <div class="row">
+            {% for course in featured_courses %}
+                <div class="col-md-4 mb-4">
+                    <div class="card course-card h-100">
+                        {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="https://via.placeholder.com/400x200/4F46E5/FFFFFF?text={{ course.title|slice:':20' }}" class="card-img-top" alt="{{ course.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <span class="badge bg-primary mb-2">{{ course.category.name }}</span>
+                            <h5 class="card-title">{{ course.title }}</h5>
+                            <p class="card-text text-muted">{{ course.short_description|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <span>{{ course.rating_average|floatformat:1 }}</span>
+                                    <small class="text-muted">({{ course.rating_count }})</small>
+                                </div>
+                                <strong class="text-primary">{{ course.price }} ကျပ်</strong>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary w-100">အသေးစိတ်ကြည့်မည်</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center">
+                    <p class="text-muted">အထူးသင်ခန်းစာများ မရှိသေးပါ</p>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'course_list' %}" class="btn btn-outline-primary">သင်ခန်းစာအားလုံးကို ကြည့်မည်</a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 text-primary">1000+</h2>
+                <p class="text-muted">သင်ခန်းစာများ</p>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 text-primary">500+</h2>
+                <p class="text-muted">ဆရာများ</p>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 text-primary">10,000+</h2>
+                <p class="text-muted">ကျောင်းသားများ</p>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 text-primary">4.8/5</h2>
+                <p class="text-muted">အဆင့်သတ်မှတ်ချက်</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

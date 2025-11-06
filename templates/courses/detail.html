@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }} - Pyinnya Hub LMS{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Course Header -->
+            <div class="card mb-4">
+                {% if course.thumbnail %}
+                    <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 400px; object-fit: cover;">
+                {% else %}
+                    <img src="https://via.placeholder.com/800x400/4F46E5/FFFFFF?text={{ course.title }}" class="card-img-top" alt="{{ course.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">{{ course.category.name }}</span>
+                    <h1 class="card-title">{{ course.title }}</h1>
+                    <p class="text-muted">{{ course.short_description }}</p>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-star-fill text-warning me-1"></i>
+                        <span class="me-2">{{ course.rating_average|floatformat:1 }}</span>
+                        <span class="text-muted">({{ course.rating_count }} ratings)</span>
+                        <span class="ms-3 text-muted">
+                            <i class="bi bi-people"></i> {{ course.enrollment_count }} ကျောင်းသား
+                        </span>
+                    </div>
+
+                    <p><strong>ဆရာ:</strong> {{ course.instructor.get_full_name }}</p>
+                    <p><strong>အဆင့်:</strong> {{ course.get_level_display }}</p>
+                    <p><strong>ဘာသာစကား:</strong> {{ course.language }}</p>
+                </div>
+            </div>
+
+            <!-- Course Description -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3>သင်ခန်းစာအကြောင်း</h3>
+                    <p>{{ course.description }}</p>
+                </div>
+            </div>
+
+            <!-- What You'll Learn -->
+            {% if course.what_you_will_learn %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3>သင်ယူရရှိမည့်အရာများ</h3>
+                    <ul>
+                        {% for item in course.what_you_will_learn %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Course Content -->
+            <div class="card">
+                <div class="card-body">
+                    <h3>သင်ခန်းစာအကြောင်းအရာများ</h3>
+                    <p class="text-muted">{{ course.sections.count }} အပိုင်း • {{ course.total_lessons }} သင်ခန်းစာ</p>
+                    {% for section in course.sections.all %}
+                        <div class="mb-3">
+                            <h5>{{ section.order }}. {{ section.title }}</h5>
+                            <ul class="list-unstyled ms-3">
+                                {% for lesson in section.lessons.all %}
+                                    <li class="mb-2">
+                                        <i class="bi bi-play-circle"></i> {{ lesson.title }}
+                                        {% if lesson.is_preview %}
+                                            <span class="badge bg-success">Preview</span>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">သင်ခန်းစာအကြောင်းအရာများ မရှိသေးပါ</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h3 class="text-primary mb-3">{{ course.price }} ကျပ်</h3>
+                    <p class="text-muted">{{ course.get_access_type_display }} သင်တန်း</p>
+
+                    {% if user.is_authenticated %}
+                        <a href="#" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-cart-plus"></i> စာရင်းသွင်းမည်
+                        </a>
+                        <a href="#" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-heart"></i> Wishlist သို့ထည့်မည်
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100 mb-2">
+                            စာရင်းသွင်းရန် အကောင့်ဝင်မည်
+                        </a>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <h5>ဤသင်ခန်းစာတွင် ပါဝင်သည်</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-play-circle"></i> {{ course.total_lessons }} သင်ခန်းစာ</li>
+                        <li><i class="bi bi-clock"></i> {{ course.duration_hours }} နာရီ</li>
+                        <li><i class="bi bi-phone"></i> မိုဘိုင်းနှင့် ကွန်ပျူတာတွင် ကြည့်ရှုနိုင်</li>
+                        <li><i class="bi bi-infinity"></i> {{ course.get_access_type_display }} သက်တမ်း</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

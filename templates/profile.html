@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Pyinnya Hub LMS{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile">
+                    {% else %}
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px; font-size: 3rem;">
+                            {{ user.first_name.0 }}{{ user.last_name.0 }}
+                        </div>
+                    {% endif %}
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <span class="badge bg-primary">{{ user.get_role_display }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5>ပရိုဖိုင် အချက်အလက်များ</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">နာမည်</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">မျိုးနွယ်အမည်</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">ဖုန်းနံပါတ်</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ user.phone_number|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">အကြောင်းအရာ</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ user.bio|default:'' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="profile_picture" class="form-label">ပရိုဖိုင်ပုံ</label>
+                            <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-primary">သိမ်းဆည်းမည်</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

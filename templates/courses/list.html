@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Courses - Pyinnya Hub LMS{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="mb-4">သင်ခန်းစာများ</h2>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="input-group">
+                <input type="text" class="form-control" name="q" placeholder="သင်ခန်းစာ ရှာမည်..." value="{{ request.GET.q }}">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> ရှာမည်</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="mb-4">
+        <a href="{% url 'course_list' %}" class="btn btn-sm btn-outline-primary">အားလုံး</a>
+        {% for category in categories %}
+            <a href="{% url 'course_list' %}?category={{ category.slug }}" class="btn btn-sm btn-outline-primary">
+                {{ category.icon }} {{ category.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Course Grid -->
+    <div class="row">
+        {% for course in courses %}
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/400x200/4F46E5/FFFFFF?text={{ course.title|slice:':20' }}" class="card-img-top" alt="{{ course.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <span class="badge bg-primary mb-2">{{ course.category.name }}</span>
+                        <h5 class="card-title">{{ course.title }}</h5>
+                        <p class="card-text text-muted">{{ course.short_description|truncatewords:15 }}</p>
+                        <p class="text-muted small">
+                            <i class="bi bi-person"></i> {{ course.instructor.get_full_name }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span>{{ course.rating_average|floatformat:1 }}</span>
+                                <small class="text-muted">({{ course.rating_count }})</small>
+                            </div>
+                            <strong class="text-primary">{{ course.price }} ကျပ်</strong>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary w-100">အသေးစိတ်</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> သင်ခန်းစာများ မတွေ့ရှိပါ
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

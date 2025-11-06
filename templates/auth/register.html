@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Pyinnya Hub LMS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5 mb-5">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">စာရင်းသွင်းမည်</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">နာမည်</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">မျိုးနွယ်အမည်</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">အီးမေးလ်</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="form-text">သင့်အီးမေးလ်ကို အကောင့်ဝင်ရန် အသုံးပြုပါမည်</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">လျှို့ဝှက်နံပါတ်</label>
+                            <input type="password" class="form-control" id="password" name="password" required minlength="8">
+                            <div class="form-text">အနည်းဆုံး ၈ လုံး ရှိရမည်</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password2" class="form-label">လျှို့ဝှက်နံပါတ် အတည်ပြုမည်</label>
+                            <input type="password" class="form-control" id="password2" name="password2" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                စည်းမျဉ်းစည်းကမ်းများကို သဘောတူပါသည်
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">စာရင်းသွင်းမည်</button>
+                    </form>
+                    <hr class="my-4">
+                    <p class="text-center text-muted">
+                        အကောင့်ရှိပြီးသားလား? <a href="{% url 'login' %}">အကောင့်ဝင်မည်</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

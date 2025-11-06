@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pyinnya Hub LMS{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #10B981;
+            --dark-color: #1F2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #4338CA;
+            border-color: #4338CA;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #7C3AED 100%);
+            color: white;
+            padding: 80px 0;
+        }
+
+        .course-card {
+            transition: transform 0.3s;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .category-badge {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .category-badge:hover {
+            background-color: #059669;
+            transform: scale(1.05);
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 80px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #EF4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="bi bi-mortarboard-fill"></i> Pyinnya Hub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'course_list' %}">သင်ခန်းစာများ</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">ဒက်ရှ်ဘုတ်</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ user.get_full_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> ပရိုဖိုင်</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> ထွက်မည်</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">အကောင့်ဝင်မည်</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary btn-sm ms-2" href="{% url 'register' %}">စာရင်းသွင်းမည်</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5><i class="bi bi-mortarboard-fill"></i> Pyinnya Hub LMS</h5>
+                    <p>မြန်မာ့ပညာရေးအတွက် အကောင်းဆုံး သင်ကြားရေးစနစ်</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>လင့်ခ်များ</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'course_list' %}" class="text-white-50">သင်ခန်းစာများ</a></li>
+                        <li><a href="#" class="text-white-50">အကြောင်းအရာ</a></li>
+                        <li><a href="#" class="text-white-50">ဆက်သွယ်ရန်</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>ဆက်သွယ်ရန်</h5>
+                    <p class="text-white-50">
+                        <i class="bi bi-envelope"></i> support@pyinnyahub.com<br>
+                        <i class="bi bi-telephone"></i> +95 9 123 456 789
+                    </p>
+                </div>
+            </div>
+            <hr class="bg-white">
+            <div class="text-center text-white-50">
+                <p>&copy; 2025 Pyinnya Hub LMS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
