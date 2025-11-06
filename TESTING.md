@@ -19,11 +19,38 @@ python3 manage.py runserver
 
 ## 👤 Test Accounts
 
-| Role | Email | Password | Purpose |
-|------|-------|----------|---------|
-| **Admin** | admin@pyinnyahub.com | admin123 | Full system access |
-| **Instructor** | instructor@test.com | instructor123 | Create courses |
-| **Student** | student@test.com | student123 | Enroll in courses |
+Test accounts have been created during setup. **For security reasons, passwords are not documented here.**
+
+To set or reset passwords for test accounts:
+
+```bash
+python3 manage.py shell
+
+# In the shell:
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+# Change admin password
+admin = User.objects.get(email='admin@pyinnyahub.com')
+admin.set_password('YOUR_SECURE_PASSWORD')
+admin.save()
+
+# Change instructor password
+instructor = User.objects.get(email='instructor@test.com')
+instructor.set_password('YOUR_SECURE_PASSWORD')
+instructor.save()
+
+# Change student password
+student = User.objects.get(email='student@test.com')
+student.set_password('YOUR_SECURE_PASSWORD')
+student.save()
+```
+
+| Role | Email | Purpose |
+|------|-------|---------|
+| **Admin** | admin@pyinnyahub.com | Full system access |
+| **Instructor** | instructor@test.com | Create courses |
+| **Student** | student@test.com | Enroll in courses |
 
 ---
 
@@ -37,8 +64,8 @@ python3 manage.py runserver
    - First Name: `တက္ကသိုလ်`
    - Last Name: `ကျောင်းသား`
    - Email: `newuser@test.com`
-   - Password: `password123`
-   - Confirm Password: `password123`
+   - Password: `[YOUR_PASSWORD]`
+   - Confirm Password: `[YOUR_PASSWORD]`
 3. Click **စာရင်းသွင်းမည်**
 4. You should see success message
 5. Check console for welcome email (if using console email backend)
@@ -49,7 +76,7 @@ python3 manage.py runserver
 1. Go to http://localhost:8000/login/
 2. Enter credentials:
    - Email: `student@test.com`
-   - Password: `student123`
+   - Password: `[PASSWORD_YOU_SET]`
 3. Click **ဝင်မည်**
 4. You should be redirected to dashboard
 
@@ -171,8 +198,8 @@ curl -X POST http://localhost:8000/api/auth/register/ \
   -H "Content-Type: application/json" \
   -d '{
     "email": "apiuser@test.com",
-    "password": "password123",
-    "password2": "password123",
+    "password": "[YOUR_SECURE_PASSWORD]",
+    "password2": "[YOUR_SECURE_PASSWORD]",
     "first_name": "API",
     "last_name": "User"
   }'
@@ -187,7 +214,7 @@ curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
     "email": "student@test.com",
-    "password": "student123"
+    "password": "[PASSWORD_YOU_SET]"
   }'
 ```
 

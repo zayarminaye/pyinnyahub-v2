@@ -250,7 +250,7 @@ SCHEDULER_AUTOSTART=False
 POST /api/auth/register/
 {
   "email": "user@example.com",
-  "password": "password123",
+  "password": "YourSecurePassword123!",
   "first_name": "John",
   "last_name": "Doe"
 }
@@ -259,7 +259,7 @@ POST /api/auth/register/
 POST /api/auth/login/
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "YourSecurePassword123!"
 }
 
 # Returns: {access, refresh, user}

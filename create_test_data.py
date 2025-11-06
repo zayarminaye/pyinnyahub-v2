@@ -2,6 +2,9 @@
 """
 Quick script to create test data for Pyinnya Hub LMS.
 Run: python3 create_test_data.py
+
+SECURITY NOTE: This script creates users WITHOUT passwords.
+You MUST set passwords manually after running this script.
 """
 import os
 import django
@@ -33,9 +36,8 @@ def create_test_data():
         }
     )
     if created:
-        student.set_password('student123')
-        student.save()
-        print(f"   ✓ Created student: {student.email}")
+        # DO NOT set password here - user must set it manually for security
+        print(f"   ✓ Created student: {student.email} (PASSWORD NOT SET)")
     else:
         print(f"   - Student already exists: {student.email}")
 
@@ -53,9 +55,8 @@ def create_test_data():
         }
     )
     if created:
-        instructor.set_password('instructor123')
-        instructor.save()
-        print(f"   ✓ Created instructor: {instructor.email}")
+        # DO NOT set password here - user must set it manually for security
+        print(f"   ✓ Created instructor: {instructor.email} (PASSWORD NOT SET)")
     else:
         print(f"   - Instructor already exists: {instructor.email}")
 
@@ -99,16 +100,27 @@ def create_test_data():
             print(f"   ✓ Created tag: {tag.name}")
 
     print("\n✅ Test data creation complete!")
-    print("\n📝 Test Accounts Created:")
-    print("   Student:")
-    print("      Email: student@test.com")
-    print("      Password: student123")
-    print("\n   Instructor:")
-    print("      Email: instructor@test.com")
-    print("      Password: instructor123")
-    print("\n   Admin (you created earlier):")
-    print("      Email: [your superuser email]")
-    print("      Password: [your superuser password]")
+    print("\n⚠️  IMPORTANT: Set passwords for test accounts!")
+    print("\nRun this command to set passwords:")
+    print("\npython3 manage.py shell")
+    print("\nThen in the shell:")
+    print("from django.contrib.auth import get_user_model")
+    print("User = get_user_model()")
+    print("")
+    print("# Set student password")
+    print("student = User.objects.get(email='student@test.com')")
+    print("student.set_password('YOUR_SECURE_PASSWORD')")
+    print("student.save()")
+    print("")
+    print("# Set instructor password")
+    print("instructor = User.objects.get(email='instructor@test.com')")
+    print("instructor.set_password('YOUR_SECURE_PASSWORD')")
+    print("instructor.save()")
+    print("")
+    print("📝 Test Accounts Created:")
+    print("   - student@test.com (Student)")
+    print("   - instructor@test.com (Instructor)")
+    print("   - [Your admin email] (Admin - created via createsuperuser)")
 
 if __name__ == '__main__':
     create_test_data()

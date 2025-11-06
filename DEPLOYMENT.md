@@ -34,11 +34,32 @@ python3 manage.py runserver
 
 ### 3. Test Accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| **Admin** | admin@pyinnyahub.com | admin123 |
-| **Instructor** | instructor@test.com | instructor123 |
-| **Student** | student@test.com | student123 |
+**SECURITY WARNING**: Change all default passwords immediately!
+
+```bash
+python3 manage.py shell
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+# Set secure passwords for all test accounts
+admin = User.objects.get(email='admin@pyinnyahub.com')
+admin.set_password('YOUR_SECURE_ADMIN_PASSWORD')
+admin.save()
+
+instructor = User.objects.get(email='instructor@test.com')
+instructor.set_password('YOUR_SECURE_INSTRUCTOR_PASSWORD')
+instructor.save()
+
+student = User.objects.get(email='student@test.com')
+student.set_password('YOUR_SECURE_STUDENT_PASSWORD')
+student.save()
+```
+
+| Role | Email |
+|------|-------|
+| **Admin** | admin@pyinnyahub.com |
+| **Instructor** | instructor@test.com |
+| **Student** | student@test.com |
 
 ### 4. Test Features
 
