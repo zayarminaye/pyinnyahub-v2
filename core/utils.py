@@ -291,13 +291,13 @@ def process_uploaded_image(image_file, max_width=None, max_height=None, quality=
         original_name = os.path.splitext(image_file.name)[0]
         new_filename = f"{sanitize_filename(original_name)}.{extension}"
 
-        # Create InMemoryUploadedFile
+        # Create InMemoryUploadedFile with correct file size
         return InMemoryUploadedFile(
             output,
             'ImageField',
             new_filename,
             content_type,
-            sys.getsizeof(output),
+            output.getbuffer().nbytes,  # Correct size of actual image data
             None
         )
 
