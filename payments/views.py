@@ -16,7 +16,7 @@ def upload_payment_view(request, course_slug):
 
     # Check for existing pending payment
     existing_payment = Payment.objects.filter(
-        student=request.user,
+        user=request.user,
         course=course,
         status='pending'
     ).first()
@@ -38,7 +38,7 @@ def upload_payment_view(request, course_slug):
             try:
                 # Create payment
                 payment = Payment.objects.create(
-                    student=request.user,
+                    user=request.user,
                     course=course,
                     amount=amount,
                     payment_method=payment_method,
@@ -60,7 +60,7 @@ def upload_payment_view(request, course_slug):
 @login_required
 def payment_status_view(request, payment_id):
     """View payment status."""
-    payment = get_object_or_404(Payment, id=payment_id, student=request.user)
+    payment = get_object_or_404(Payment, id=payment_id, user=request.user)
 
     context = {
         'payment': payment,
@@ -72,7 +72,7 @@ def payment_status_view(request, payment_id):
 def my_payments_view(request):
     """View all user payments."""
     payments = Payment.objects.filter(
-        student=request.user
+        user=request.user
     ).select_related('course', 'reviewed_by').order_by('-created_at')
 
     context = {

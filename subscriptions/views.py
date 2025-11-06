@@ -15,12 +15,12 @@ from payments.models import Payment
 def my_subscriptions_view(request):
     """Display user's active and expired subscriptions."""
     active_subscriptions = Subscription.objects.filter(
-        student=request.user,
+        user=request.user,
         is_active=True
     ).select_related('course', 'course__instructor', 'course__category')
 
     expired_subscriptions = Subscription.objects.filter(
-        student=request.user,
+        user=request.user,
         is_active=False
     ).select_related('course', 'course__instructor', 'course__category')[:10]
 
@@ -38,7 +38,7 @@ def enroll_course_view(request, course_slug):
 
     # Check if already enrolled
     existing_subscription = Subscription.objects.filter(
-        student=request.user,
+        user=request.user,
         course=course,
         is_active=True
     ).first()
@@ -50,7 +50,7 @@ def enroll_course_view(request, course_slug):
 
     # Check for pending payment
     pending_payment = Payment.objects.filter(
-        student=request.user,
+        user=request.user,
         course=course,
         status='pending'
     ).first()
@@ -69,7 +69,7 @@ def subscription_detail_view(request, subscription_id):
     subscription = get_object_or_404(
         Subscription,
         id=subscription_id,
-        student=request.user
+        user=request.user
     )
 
     course = subscription.course

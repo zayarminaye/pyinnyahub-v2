@@ -11,7 +11,7 @@
                     <h5 class="mb-0"><i class="bi bi-check-circle"></i> ငွေပေးချေမှု အတည်ပြုခြင်း</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>ကျောင်းသား:</strong> {{ payment.student.get_full_name }}</p>
+                    <p><strong>ကျောင်းသား:</strong> {{ payment.user.get_full_name }}</p>
                     <p><strong>သင်ခန်းစာ:</strong> {{ payment.course.title }}</p>
                     <p><strong>ငွေပမာဏ:</strong> {{ payment.amount }} ကျပ်</p>
                     <p><strong>နည်းလမ်း:</strong> {{ payment.get_payment_method_display }}</p>

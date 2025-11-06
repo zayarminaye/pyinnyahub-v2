@@ -40,7 +40,7 @@ def course_detail_view(request, slug):
     if request.user.is_authenticated:
         from subscriptions.models import Subscription
         active_subscription = Subscription.objects.filter(
-            student=request.user,
+            user=request.user,
             course=course,
             is_active=True
         ).first()

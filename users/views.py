@@ -264,7 +264,7 @@ def student_dashboard_view(request):
     from subscriptions.models import Subscription
 
     active_subscriptions = Subscription.objects.filter(
-        student=request.user,
+        user=request.user,
         is_active=True
     ).select_related('course', 'course__instructor')[:6]
 
@@ -307,7 +307,7 @@ def admin_dashboard_view(request):
     from courses.models import Course
     from payments.models import Payment
 
-    pending_payments = Payment.objects.filter(status='pending').select_related('student', 'course')
+    pending_payments = Payment.objects.filter(status='pending').select_related('user', 'course')
     pending_courses = Course.objects.filter(status='pending').select_related('instructor')
     pending_applications = InstructorApplication.objects.filter(status='pending').select_related('user')
 

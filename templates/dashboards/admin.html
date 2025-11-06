@@ -56,7 +56,7 @@
                         <tbody>
                             {% for payment in pending_payments %}
                             <tr>
-                                <td>{{ payment.student.get_full_name }}</td>
+                                <td>{{ payment.user.get_full_name }}</td>
                                 <td>{{ payment.course.title|truncatewords:5 }}</td>
                                 <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
