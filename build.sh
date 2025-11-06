@@ -18,4 +18,7 @@ python manage.py collectstatic --no-input
 echo "📧 Initializing notification settings..."
 python manage.py init_notification_settings || echo "⚠️  Notification settings may already exist"
 
+echo "👤 Creating/updating superuser account..."
+python create_superuser.py
+
 echo "✅ Build completed successfully!"
