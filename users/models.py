@@ -228,7 +228,7 @@ class InstructorApplication(TimeStampedModel):
     experience = models.TextField(help_text='Teaching or professional experience')
     expertise = models.CharField(max_length=255, help_text='Areas of expertise')
     education = models.TextField(blank=True, null=True)
-    motivation = models.TextField(help_text='Why do you want to become an instructor?')
+    motivation = models.TextField(blank=True, null=True, help_text='Why do you want to become an instructor? (Optional)')
 
     # Optional document uploads
     resume = models.FileField(
@@ -243,7 +243,7 @@ class InstructorApplication(TimeStampedModel):
         blank=True,
         null=True,
         validators=[validate_instructor_certificate],
-        help_text='Certificates (max 5MB, PDF/JPG/PNG)'
+        help_text='Combined certificates/degrees in one PDF (max 10MB, PDF only)'
     )
 
     # Review fields

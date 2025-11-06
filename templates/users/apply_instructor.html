@@ -47,10 +47,10 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="motivation" class="form-label fw-bold">ဆရာ/ဆရာမ ဖြစ်လိုရခြင်း အကြောင်းပြချက် <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="motivation" name="motivation" rows="4" required
+                            <label for="motivation" class="form-label fw-bold">ဆရာ/ဆရာမ ဖြစ်လိုရခြင်း အကြောင်းပြချက်</label>
+                            <textarea class="form-control" id="motivation" name="motivation" rows="4"
                                       placeholder="သင် ဆရာ/ဆရာမ ဖြစ်လိုရခြင်း အကြောင်းရင်းနှင့် သင့်ရည်မှန်းချက်များကို ဖော်ပြပါ">{{ form_data.motivation|default:'' }}</textarea>
-                            <div class="form-text">အနည်းဆုံး ၅၀ စာလုံး - သင် Pyinnya Hub တွင် ဘာကြောင့် သင်ကြားချင်သနည်း?</div>
+                            <div class="form-text">ရွေးချယ်ခြင်း - သင် Pyinnya Hub တွင် ဘာကြောင့် သင်ကြားချင်သနည်း?</div>
                         </div>
 
                         <div class="mb-4">
@@ -60,9 +60,22 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="certificates" class="form-label fw-bold">အသိအမှတ်ပြု လက်မှတ်များ</label>
-                            <input type="file" class="form-control" id="certificates" name="certificates" accept=".pdf,.jpg,.jpeg,.png">
-                            <div class="form-text">ရွေးချယ်ခြင်း - သင့်တွင်ရှိသော လက်မှတ်များ (PDF, JPG, PNG - max 5MB)</div>
+                            <label for="certificates" class="form-label fw-bold">
+                                အသိအမှတ်ပြု လက်မှတ်များ / ဘွဲ့လက်မှတ်များ
+                                <span class="badge bg-info ms-2">PDF သာ</span>
+                            </label>
+                            <input type="file" class="form-control" id="certificates" name="certificates" accept=".pdf">
+                            <div class="form-text">
+                                <i class="bi bi-info-circle text-primary"></i>
+                                <strong>သတိပြုရန်:</strong> သင့်တွင်ရှိသော ဘွဲ့လက်မှတ်၊ အသိအမှတ်ပြုလက်မှတ်၊ ဆုလက်မှတ် စသည်တို့ကို
+                                <strong class="text-danger">တစ်ခုတည်းသော PDF ဖိုင်</strong> အဖြစ် ပေါင်းစပ်၍ တင်ပေးပါ။
+                                <br>
+                                <small class="text-muted">
+                                    • PDF ဖိုင်သာ လက်ခံပါသည် (JPG, PNG လက်မခံပါ)<br>
+                                    • အများဆုံး 10MB<br>
+                                    • အားလုံးကို တစ်ခုတည်းသော PDF အဖြစ် ပေါင်းရန် Adobe Acrobat သို့မဟုတ် အွန်လိုင်း PDF merger tool များကို အသုံးပြုနိုင်ပါသည်
+                                </small>
+                            </div>
                         </div>
 
                         <div class="alert alert-info">

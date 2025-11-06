@@ -543,14 +543,11 @@ def apply_instructor_view(request):
 
         # Validation
         errors = []
-        if not all([expertise, experience, motivation]):
+        if not all([expertise, experience]):
             errors.append("ကျေးဇူးပြု၍ လိုအပ်သော အချက်အလက်များကို ဖြည့်ပေးပါ။")
 
         if experience and len(experience) < 50:
             errors.append("အတွေ့အကြုံဖော်ပြချက် အနည်းဆုံး ၅၀ စာလုံး ရှိရပါမည်။")
-
-        if motivation and len(motivation) < 50:
-            errors.append("လျှောက်ထားရခြင်း အကြောင်းပြချက် အနည်းဆုံး ၅၀ စာလုံး ရှိရပါမည်။")
 
         if errors:
             for error in errors:
@@ -564,7 +561,7 @@ def apply_instructor_view(request):
                 expertise=expertise,
                 experience=experience,
                 education=education if education else '',
-                motivation=motivation,
+                motivation=motivation if motivation else '',
             )
 
             # Save optional file uploads

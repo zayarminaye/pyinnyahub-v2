@@ -433,17 +433,14 @@ def validate_instructor_resume(file):
 
 
 def validate_instructor_certificate(file):
-    """Validate instructor certificate uploads."""
+    """Validate instructor certificate uploads - PDF only for combined documents."""
     ext = os.path.splitext(file.name)[1].lower()
 
-    if ext in ['.jpg', '.jpeg', '.png', '.pdf']:
-        if ext == '.pdf':
-            validate_document_file(file, max_size_mb=5)
-        else:
-            validate_file_size(file, max_size_mb=5)
-            validate_image_content(file)
-    else:
-        raise ValidationError('Certificate must be an image (JPG, PNG) or PDF.')
+    if ext != '.pdf':
+        raise ValidationError('ကျေးဇူးပြု၍ PDF ဖိုင်သာ တင်ပါ။ (Please upload PDF file only)')
+
+    # Validate PDF with larger size limit for combined documents
+    validate_document_file(file, max_size_mb=10)  # 10MB for combined certificates
 
 
 def format_currency(amount, currency='MMK'):
