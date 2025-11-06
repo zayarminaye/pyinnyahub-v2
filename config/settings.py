@@ -61,6 +61,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ==============================================================================
+# MESSAGES CONFIGURATION
+# ==============================================================================
+# Map Django message levels to Bootstrap alert classes
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',  # Map error to danger for Bootstrap red alerts
+}
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

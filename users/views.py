@@ -12,6 +12,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from .models import InstructorApplication
 from .serializers import (
@@ -566,21 +567,46 @@ def apply_instructor_view(request):
 
             # Save optional file uploads
             if resume:
-                application.resume = resume
-            if certificates:
-                application.certificates = certificates
+                try:
+                    application.resume = resume
+                    application.save()
+                except Exception as e:
+                    messages.error(request, f"Resume ဖိုင် တင်ရာတွင် အမှား: {str(e)}")
+                    return render(request, 'users/apply_instructor.html', {'form_data': form_data})
 
-            if resume or certificates:
-                application.save()
+            if certificates:
+                try:
+                    application.certificates = certificates
+                    application.save()
+                except Exception as e:
+                    messages.error(request, f"လက်မှတ် ဖိုင် တင်ရာတွင် အမှား: {str(e)}")
+                    return render(request, 'users/apply_instructor.html', {'form_data': form_data})
 
             messages.success(request, "လျှောက်ထားမှု အောင်မြင်ပါသည်။ Admin မှ စိစစ်ပြီး အကြောင်းကြားပါမည်။")
             return redirect('dashboard')
+        except ValidationError as e:
+            # Validation errors from model validators
+            error_messages = e.message_dict if hasattr(e, 'message_dict') else {e.message if hasattr(e, 'message') else str(e)}
+            for field, msgs in (error_messages.items() if isinstance(error_messages, dict) else [('error', [error_messages])]):
+                for msg in (msgs if isinstance(msgs, list) else [msgs]):
+                    messages.error(request, f"{field}: {msg}" if field != 'error' else msg)
+            return render(request, 'users/apply_instructor.html', {'form_data': form_data})
         except Exception as e:
-            # User-friendly error message
+            # Log the actual error for debugging
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Instructor application error: {e}")
-            messages.error(request, "လျှောက်ထားမှု မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။")
+            logger.error(f"Instructor application error for {request.user.email}: {str(e)}", exc_info=True)
+
+            # Show user-friendly but informative error
+            error_message = str(e)
+            if 'resume' in error_message.lower():
+                messages.error(request, f"Resume ဖိုင်တွင် ပြဿနာရှိပါသည်: {error_message}")
+            elif 'certificate' in error_message.lower():
+                messages.error(request, f"လက်မှတ် ဖိုင်တွင် ပြဿနာရှိပါသည်: {error_message}")
+            elif 'file' in error_message.lower() or 'upload' in error_message.lower():
+                messages.error(request, f"ဖိုင်တင်ရာတွင် ပြဿနာရှိပါသည်: {error_message}")
+            else:
+                messages.error(request, f"လျှောက်ထားမှု မအောင်မြင်ပါ: {error_message}")
             return render(request, 'users/apply_instructor.html', {'form_data': form_data})
 
     return render(request, 'users/apply_instructor.html')
