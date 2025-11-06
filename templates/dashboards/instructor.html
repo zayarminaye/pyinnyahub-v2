@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Instructor Dashboard</h2>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-file-earmark"></i> Draft</h5>
+                    <h2>{{ draft_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-clock"></i> Pending Review</h5>
+                    <h2>{{ pending_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-check-circle"></i> Published</h5>
+                    <h2>{{ published_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-book"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</h5>
+        </div>
+        <div class="card-body">
+            {% if courses %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>သင်ခန်းစာအမည်</th>
+                                <th>အခြေအနေ</th>
+                                <th>သင်တန်းကြေး</th>
+                                <th>ဖန်တီးသည့်ရက်</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                <td>{{ course.title|truncatewords:8 }}</td>
+                                <td>
+                                    {% if course.status == 'draft' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                    {% elif course.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif course.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif course.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ course.price }} ကျပ်</td>
+                                <td>{{ course.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> ကြည့်မည်
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">သင်ခန်းစာ မရှိသေးပါ</p>
+                <div class="text-center">
+                    <p class="text-muted">သင်ခန်းစာ အသစ် ဖန်တီးရန် Django Admin Panel ကို အသုံးပြုပါ</p>
+                    <a href="/admin/" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-plus-circle"></i> Admin Panel သို့
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

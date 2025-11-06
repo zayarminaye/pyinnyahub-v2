@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Approve Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> ငွေပေးချေမှု အတည်ပြုခြင်း</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>ကျောင်းသား:</strong> {{ payment.student.get_full_name }}</p>
+                    <p><strong>သင်ခန်းစာ:</strong> {{ payment.course.title }}</p>
+                    <p><strong>ငွေပမာဏ:</strong> {{ payment.amount }} ကျပ်</p>
+                    <p><strong>နည်းလမ်း:</strong> {{ payment.get_payment_method_display }}</p>
+                    <p><strong>Transaction ID:</strong> {{ payment.transaction_id }}</p>
+
+                    {% if payment.receipt %}
+                    <p><strong>ပြေစာ:</strong></p>
+                    <img src="{{ payment.receipt.url }}" class="img-fluid" alt="Receipt" style="max-height: 300px;">
+                    {% endif %}
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <p class="alert alert-info">ဤငွေပေးချေမှုကို အတည်ပြုမှာ သေချာပါသလား?</p>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check"></i> အတည်ပြုမည်
+                            </button>
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">ပယ်ဖျက်မည်</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

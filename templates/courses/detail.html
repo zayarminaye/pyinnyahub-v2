@@ -89,9 +89,15 @@
                     <p class="text-muted">{{ course.get_access_type_display }} သင်တန်း</p>
 
                     {% if user.is_authenticated %}
-                        <a href="#" class="btn btn-primary w-100 mb-2">
-                            <i class="bi bi-cart-plus"></i> စာရင်းသွင်းမည်
-                        </a>
+                        {% if is_enrolled %}
+                            <a href="{% url 'subscription_detail' active_subscription.id %}" class="btn btn-success w-100 mb-2">
+                                <i class="bi bi-play-circle"></i> သင်ခန်းစာ ဆက်လက်လေ့လာမည်
+                            </a>
+                        {% else %}
+                            <a href="{% url 'enroll_course' course.slug %}" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-cart-plus"></i> စာရင်းသွင်းမည်
+                            </a>
+                        {% endif %}
                         <a href="#" class="btn btn-outline-primary w-100">
                             <i class="bi bi-heart"></i> Wishlist သို့ထည့်မည်
                         </a>

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-credit-card"></i> စောင့်ဆိုင်းနေသော ငွေပေးချေမှု</h5>
+                    <h2>{{ pending_payments_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-book"></i> စောင့်ဆိုင်းနေသော သင်ခန်းစာ</h5>
+                    <h2>{{ pending_courses_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-person-plus"></i> ဆရာ/ဆရာမ လျှောက်ထားမှု</h5>
+                    <h2>{{ pending_applications_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Payments -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0"><i class="bi bi-credit-card"></i> စောင့်ဆိုင်းနေသော ငွေပေးချေမှုများ</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ကျောင်းသား</th>
+                                <th>သင်ခန်းစာ</th>
+                                <th>ငွေပမာဏ</th>
+                                <th>နည်းလမ်း</th>
+                                <th>ရက်စွဲ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in pending_payments %}
+                            <tr>
+                                <td>{{ payment.student.get_full_name }}</td>
+                                <td>{{ payment.course.title|truncatewords:5 }}</td>
+                                <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'payment_status' payment.id %}" class="btn btn-sm btn-outline-info" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_approve_payment' payment.id %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check"></i>
+                                    </a>
+                                    <a href="{% url 'admin_reject_payment' payment.id %}" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">စောင့်ဆိုင်းနေသော ငွေပေးချေမှု မရှိပါ</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Courses -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-book"></i> စောင့်ဆိုင်းနေသော သင်ခန်းစာများ</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_courses %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>သင်ခန်းစာအမည်</th>
+                                <th>ဆရာ/ဆရာမ</th>
+                                <th>သင်တန်းကြေး</th>
+                                <th>ရက်စွဲ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in pending_courses %}
+                            <tr>
+                                <td>{{ course.title|truncatewords:8 }}</td>
+                                <td>{{ course.instructor.get_full_name }}</td>
+                                <td>{{ course.price }} ကျပ်</td>
+                                <td>{{ course.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-info" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_approve_course' course.id %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check"></i>
+                                    </a>
+                                    <a href="{% url 'admin_reject_course' course.id %}" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">စောင့်ဆိုင်းနေသော သင်ခန်းစာ မရှိပါ</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Instructor Applications -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-person-plus"></i> ဆရာ/ဆရာမ လျှောက်ထားမှုများ</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_applications %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>အမည်</th>
+                                <th>Email</th>
+                                <th>အတွေ့အကြုံ</th>
+                                <th>ရက်စွဲ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in pending_applications %}
+                            <tr>
+                                <td>{{ app.user.get_full_name }}</td>
+                                <td>{{ app.user.email }}</td>
+                                <td>{{ app.years_of_experience }} နှစ်</td>
+                                <td>{{ app.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_approve_instructor' app.id %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check"></i> အတည်ပြု
+                                    </a>
+                                    <a href="{% url 'admin_reject_instructor' app.id %}" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-x"></i> ငြင်းပယ်
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">စောင့်ဆိုင်းနေသော လျှောက်ထားမှု မရှိပါ</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

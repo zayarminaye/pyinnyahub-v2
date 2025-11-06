@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }} - Learning{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <div class="row">
+        <!-- Course Content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ course.title }}</h4>
+                    <p class="text-muted mb-0 mt-2">
+                        <i class="bi bi-person"></i> {{ course.instructor.get_full_name }} |
+                        <i class="bi bi-tag"></i> {{ course.category.name }}
+                    </p>
+                </div>
+                <div class="card-body">
+                    <!-- Course Sections and Lessons -->
+                    {% for section in sections %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-folder"></i> {{ section.title }}
+                                </h5>
+                                {% if section.description %}
+                                    <p class="text-muted mb-0 mt-2">{{ section.description }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    {% for lesson in section.lessons.all %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        {% if lesson.content_type == 'video' %}
+                                                            <i class="bi bi-play-circle text-primary"></i>
+                                                        {% elif lesson.content_type == 'text' %}
+                                                            <i class="bi bi-file-text text-success"></i>
+                                                        {% elif lesson.content_type == 'quiz' %}
+                                                            <i class="bi bi-question-circle text-warning"></i>
+                                                        {% endif %}
+                                                        {{ lesson.title }}
+                                                    </h6>
+                                                    {% if lesson.description %}
+                                                        <p class="text-muted small mb-0">{{ lesson.description|truncatewords:20 }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    {% if lesson.duration_minutes %}
+                                                        <span class="badge bg-secondary">{{ lesson.duration_minutes }} mins</span>
+                                                    {% endif %}
+                                                    {% if lesson.is_preview %}
+                                                        <span class="badge bg-info">Preview</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="list-group-item text-muted text-center">
+                                            သင်ခန်းစာများ မရှိသေးပါ
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-info-circle"></i> သင်ခန်းစာအကြောင်းအရာများ မရှိသေးပါ
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Info Sidebar -->
+        <div class="col-md-3">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h6 class="card-title">Subscription အချက်အလက်</h6>
+                    <hr>
+                    <p class="small">
+                        <strong>အခြေအနေ:</strong><br>
+                        {% if subscription.is_expired %}
+                            <span class="badge bg-danger">သက်တမ်းကုန်ဆုံး</span>
+                        {% else %}
+                            <span class="badge bg-success">အသုံးပြုနိုင်</span>
+                        {% endif %}
+                    </p>
+                    <p class="small">
+                        <strong>စတင်သည့်ရက်:</strong><br>
+                        {{ subscription.created_at|date:"d M Y" }}
+                    </p>
+                    {% if subscription.expires_at %}
+                        <p class="small">
+                            <strong>သက်တမ်းကုန်မည့်ရက်:</strong><br>
+                            {{ subscription.expires_at|date:"d M Y" }}
+                        </p>
+                    {% else %}
+                        <p class="small text-success">
+                            <i class="bi bi-infinity"></i> <strong>တစ်သက်တာ အသုံးပြုနိုင်</strong>
+                        </p>
+                    {% endif %}
+
+                    <hr>
+
+                    <h6 class="card-title">သင်တန်းတွင်</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="bi bi-check-circle text-success"></i> {{ sections|length }} Section(s)</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Full lifetime access</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Certificate of completion</li>
+                    </ul>
+
+                    <hr>
+
+                    <a href="{% url 'my_subscriptions' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-arrow-left"></i> သင်ခန်းစာများသို့
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

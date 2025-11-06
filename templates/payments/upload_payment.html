@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Payment - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> ငွေပေးချေမှု တင်သွင်းခြင်း</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Course Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if course.thumbnail %}
+                                <img src="{{ course.thumbnail.url }}" class="img-fluid rounded" alt="{{ course.title }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x200" class="img-fluid rounded" alt="{{ course.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h5>{{ course.title }}</h5>
+                            <p class="text-muted">{{ course.short_description }}</p>
+                            <p><strong>ဆရာ/ဆရာမ:</strong> {{ course.instructor.get_full_name }}</p>
+                            <p><strong>သင်တန်းကြေး:</strong> <span class="text-primary fs-4">{{ course.price }} ကျပ်</span></p>
+                            <p><strong>သက်တမ်း:</strong>
+                                {% if course.access_type == 'monthly' %}
+                                    1 လ
+                                {% elif course.access_type == 'yearly' %}
+                                    1 နှစ်
+                                {% else %}
+                                    တစ်သက်တာ
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Payment Instructions -->
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> ငွေပေးချေရန် လမ်းညွှန်ချက်</h6>
+                        <ol class="mb-0">
+                            <li>သင့်လျော်သော ငွေပေးချေမှုနည်းလမ်းကို ရွေးချယ်ပါ</li>
+                            <li>သင်တန်းကြေး <strong>{{ course.price }} ကျပ်</strong> လွှဲပြောင်းပါ</li>
+                            <li>လွှဲပြောင်းပြီးနောက် ရရှိသော receipt/screenshot တင်ပါ</li>
+                            <li>Admin မှ အတည်ပြုပြီးမှသာ သင်ခန်းစာကို စတင်နိုင်မည်ဖြစ်ပါသည်</li>
+                        </ol>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">ငွေပမာဏ <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="amount" name="amount" value="{{ course.price }}" required readonly>
+                                <span class="input-group-text">ကျပ်</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">ငွေပေးချေမှုနည်းလမ်း <span class="text-danger">*</span></label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="">ရွေးချယ်ပါ...</option>
+                                <option value="kbz_pay">KBZ Pay</option>
+                                <option value="wave_money">Wave Money</option>
+                                <option value="cb_pay">CB Pay</option>
+                                <option value="aya_pay">AYA Pay</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="other">အခြား</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="transaction_id" class="form-label">Transaction ID / Reference No <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="transaction_id" name="transaction_id" placeholder="TXN123456789" required>
+                            <small class="text-muted">လွှဲပြောင်းပြီးနောက် ရရှိသော transaction ID ထည့်ပါ</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="receipt" class="form-label">ငွေလွှဲပြေစာ (Receipt/Screenshot) <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="receipt" name="receipt" accept="image/*" required>
+                            <small class="text-muted">PNG, JPG, JPEG သာလျှင် တင်နိုင်ပါသည် (Max 5MB)</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-upload"></i> ငွေပေးချေမှု တင်သွင်းမည်
+                            </button>
+                            <a href="{% url 'course_detail' course.slug %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> နောက်သို့
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

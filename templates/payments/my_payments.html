@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}My Payments{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="mb-4"><i class="bi bi-credit-card"></i> ငွေပေးချေမှု မှတ်တမ်းများ</h2>
+
+    <div class="card">
+        <div class="card-body">
+            {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ရက်စွဲ</th>
+                                <th>သင်ခန်းစာ</th>
+                                <th>ငွေပမာဏ</th>
+                                <th>နည်းလမ်း</th>
+                                <th>အခြေအနေ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    <strong>{{ payment.course.title }}</strong><br>
+                                    <small class="text-muted">{{ payment.course.instructor.get_full_name }}</small>
+                                </td>
+                                <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>
+                                    {% if payment.status == 'pending' %}
+                                        <span class="badge bg-warning">စောင့်ဆိုင်းနေဆဲ</span>
+                                    {% elif payment.status == 'approved' %}
+                                        <span class="badge bg-success">အတည်ပြုပြီး</span>
+                                    {% elif payment.status == 'rejected' %}
+                                        <span class="badge bg-danger">ငြင်းပယ်</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'payment_status' payment.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> ကြည့်မည်
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> ငွေပေးချေမှု မှတ်တမ်း မရှိသေးပါ
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

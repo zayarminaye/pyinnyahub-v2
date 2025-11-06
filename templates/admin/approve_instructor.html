@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Approve Instructor{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> ဆရာ/ဆရာမ အတည်ပြုခြင်း</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>အမည်:</strong> {{ application.user.get_full_name }}</p>
+                    <p><strong>Email:</strong> {{ application.user.email }}</p>
+                    <p><strong>အတွေ့အကြုံ:</strong> {{ application.years_of_experience }} နှစ်</p>
+                    <p><strong>ကျွမ်းကျင်မှု:</strong> {{ application.expertise }}</p>
+                    <p><strong>အကြောင်းအရာ:</strong> {{ application.bio|truncatewords:30 }}</p>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <p class="alert alert-info">{{ application.user.get_full_name }} ကို ဆရာ/ဆရာမအဖြစ် အတည်ပြုမှာ သေချာပါသလား?</p>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check"></i> အတည်ပြုမည်
+                            </button>
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">ပယ်ဖျက်မည်</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

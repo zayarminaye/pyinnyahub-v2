@@ -34,7 +34,22 @@ def course_detail_view(request, slug):
     # Increment view count
     course.increment_view_count()
 
+    # Check if user is enrolled
+    is_enrolled = False
+    active_subscription = None
+    if request.user.is_authenticated:
+        from subscriptions.models import Subscription
+        active_subscription = Subscription.objects.filter(
+            student=request.user,
+            course=course,
+            is_active=True
+        ).first()
+        if active_subscription and not active_subscription.is_expired():
+            is_enrolled = True
+
     context = {
         'course': course,
+        'is_enrolled': is_enrolled,
+        'active_subscription': active_subscription,
     }
     return render(request, 'courses/detail.html', context)

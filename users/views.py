@@ -252,3 +252,226 @@ def profile_view(request):
         return redirect('profile')
 
     return render(request, 'profile.html')
+
+
+# ============================================================================
+# ROLE-SPECIFIC DASHBOARDS
+# ============================================================================
+
+@login_required
+def student_dashboard_view(request):
+    """Student dashboard - shows enrolled courses."""
+    from subscriptions.models import Subscription
+
+    active_subscriptions = Subscription.objects.filter(
+        student=request.user,
+        is_active=True
+    ).select_related('course', 'course__instructor')[:6]
+
+    context = {
+        'active_subscriptions': active_subscriptions,
+    }
+    return render(request, 'dashboards/student.html', context)
+
+
+@login_required
+def instructor_dashboard_view(request):
+    """Instructor dashboard - shows instructor's courses and stats."""
+    if not request.user.is_instructor:
+        messages.error(request, "Access denied. Instructors only.")
+        return redirect('dashboard')
+
+    from courses.models import Course
+
+    courses = Course.objects.filter(instructor=request.user).order_by('-created_at')
+    draft_courses = courses.filter(status='draft')
+    pending_courses = courses.filter(status='pending')
+    published_courses = courses.filter(status='approved', is_published=True)
+
+    context = {
+        'courses': courses[:10],
+        'draft_count': draft_courses.count(),
+        'pending_count': pending_courses.count(),
+        'published_count': published_courses.count(),
+    }
+    return render(request, 'dashboards/instructor.html', context)
+
+
+@login_required
+def admin_dashboard_view(request):
+    """Admin dashboard - shows pending items for approval."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied. Admins only.")
+        return redirect('dashboard')
+
+    from courses.models import Course
+    from payments.models import Payment
+
+    pending_payments = Payment.objects.filter(status='pending').select_related('student', 'course')
+    pending_courses = Course.objects.filter(status='pending').select_related('instructor')
+    pending_applications = InstructorApplication.objects.filter(status='pending').select_related('user')
+
+    context = {
+        'pending_payments_count': pending_payments.count(),
+        'pending_courses_count': pending_courses.count(),
+        'pending_applications_count': pending_applications.count(),
+        'pending_payments': pending_payments[:10],
+        'pending_courses': pending_courses[:10],
+        'pending_applications': pending_applications[:10],
+    }
+    return render(request, 'dashboards/admin.html', context)
+
+
+# ============================================================================
+# ADMIN APPROVAL VIEWS
+# ============================================================================
+
+@login_required
+def admin_approve_payment_view(request, payment_id):
+    """Admin approves a payment."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from payments.models import Payment
+    from django.shortcuts import get_object_or_404
+
+    payment = get_object_or_404(Payment, id=payment_id)
+
+    if request.method == 'POST':
+        try:
+            payment.approve(request.user)
+            messages.success(request, f"ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ။ {payment.student.get_full_name()} သည် {payment.course.title} ကို စတင်နိုင်ပါပြီ။")
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+
+        return redirect('admin_dashboard')
+
+    context = {'payment': payment}
+    return render(request, 'admin/approve_payment.html', context)
+
+
+@login_required
+def admin_reject_payment_view(request, payment_id):
+    """Admin rejects a payment."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from payments.models import Payment
+    from django.shortcuts import get_object_or_404
+
+    payment = get_object_or_404(Payment, id=payment_id)
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', 'Invalid payment details')
+        try:
+            payment.reject(request.user, reason)
+            messages.success(request, "ငွေပေးချေမှု ငြင်းပယ်ပြီးပါပြီ။")
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+
+        return redirect('admin_dashboard')
+
+    context = {'payment': payment}
+    return render(request, 'admin/reject_payment.html', context)
+
+
+@login_required
+def admin_approve_course_view(request, course_id):
+    """Admin approves a course."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from courses.models import Course
+    from django.shortcuts import get_object_or_404
+
+    course = get_object_or_404(Course, id=course_id)
+
+    if request.method == 'POST':
+        try:
+            course.approve(request.user)
+            messages.success(request, f"သင်ခန်းစာ '{course.title}' ကို အတည်ပြုပြီးပါပြီ။")
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+
+        return redirect('admin_dashboard')
+
+    context = {'course': course}
+    return render(request, 'admin/approve_course.html', context)
+
+
+@login_required
+def admin_reject_course_view(request, course_id):
+    """Admin rejects a course."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from courses.models import Course
+    from django.shortcuts import get_object_or_404
+
+    course = get_object_or_404(Course, id=course_id)
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', 'Does not meet quality standards')
+        try:
+            course.reject(request.user, reason)
+            messages.success(request, "သင်ခန်းစာ ငြင်းပယ်ပြီးပါပြီ။")
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+
+        return redirect('admin_dashboard')
+
+    context = {'course': course}
+    return render(request, 'admin/reject_course.html', context)
+
+
+@login_required
+def admin_approve_instructor_view(request, application_id):
+    """Admin approves instructor application."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from django.shortcuts import get_object_or_404
+
+    application = get_object_or_404(InstructorApplication, id=application_id)
+
+    if request.method == 'POST':
+        try:
+            application.approve(request.user)
+            messages.success(request, f"{application.user.get_full_name()} ကို ဆရာ/ဆရာမအဖြစ် အတည်ပြုပြီးပါပြီ။")
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+
+        return redirect('admin_dashboard')
+
+    context = {'application': application}
+    return render(request, 'admin/approve_instructor.html', context)
+
+
+@login_required
+def admin_reject_instructor_view(request, application_id):
+    """Admin rejects instructor application."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from django.shortcuts import get_object_or_404
+
+    application = get_object_or_404(InstructorApplication, id=application_id)
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', 'Application does not meet requirements')
+        try:
+            application.reject(request.user, reason)
+            messages.success(request, "ဆရာ/ဆရာမ လျှောက်ထားမှု ငြင်းပယ်ပြီးပါပြီ။")
+        except Exception as e:
+            messages.error(request, f"အမှား: {str(e)}")
+
+        return redirect('admin_dashboard')
+
+    context = {'application': application}
+    return render(request, 'admin/reject_instructor.html', context)

@@ -14,6 +14,19 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('profile/', views.profile_view, name='profile'),
 
+    # Role-specific Dashboards
+    path('dashboard/student/', views.student_dashboard_view, name='student_dashboard'),
+    path('dashboard/instructor/', views.instructor_dashboard_view, name='instructor_dashboard'),
+    path('dashboard/admin/', views.admin_dashboard_view, name='admin_dashboard'),
+
+    # Admin Approval Views
+    path('admin/payment/<int:payment_id>/approve/', views.admin_approve_payment_view, name='admin_approve_payment'),
+    path('admin/payment/<int:payment_id>/reject/', views.admin_reject_payment_view, name='admin_reject_payment'),
+    path('admin/course/<int:course_id>/approve/', views.admin_approve_course_view, name='admin_approve_course'),
+    path('admin/course/<int:course_id>/reject/', views.admin_reject_course_view, name='admin_reject_course'),
+    path('admin/instructor/<int:application_id>/approve/', views.admin_approve_instructor_view, name='admin_approve_instructor'),
+    path('admin/instructor/<int:application_id>/reject/', views.admin_reject_instructor_view, name='admin_reject_instructor'),
+
     # API Views
     path('api/auth/register/', views.RegisterAPIView.as_view(), name='api_register'),
     path('api/auth/login/', views.LoginAPIView.as_view(), name='api_login'),

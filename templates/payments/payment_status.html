@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Status{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> ငွေပေးချေမှု အခြေအနေ</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Status Badge -->
+                    <div class="text-center mb-4">
+                        {% if payment.status == 'pending' %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-clock-history fs-1"></i>
+                                <h4 class="mt-2">စောင့်ဆိုင်းနေဆဲ</h4>
+                                <p>Admin မှ သင့်ငွေပေးချေမှုကို စိစစ်နေဆဲဖြစ်ပါသည်။</p>
+                            </div>
+                        {% elif payment.status == 'approved' %}
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle fs-1"></i>
+                                <h4 class="mt-2">အတည်ပြုပြီး</h4>
+                                <p>သင့်ငွေပေးချေမှု အောင်မြင်ပါသည်။ ယခု သင်ခန်းစာကို စတင်နိုင်ပါပြီ။</p>
+                                <a href="{% url 'my_subscriptions' %}" class="btn btn-success mt-2">
+                                    <i class="bi bi-book"></i> သင်ခန်းစာသို့ သွားမည်
+                                </a>
+                            </div>
+                        {% elif payment.status == 'rejected' %}
+                            <div class="alert alert-danger">
+                                <i class="bi bi-x-circle fs-1"></i>
+                                <h4 class="mt-2">ငြင်းပယ်ခံရသည်</h4>
+                                <p>သင့်ငွေပေးချေမှုကို ငြင်းပယ်ခံရပါသည်။</p>
+                                {% if payment.admin_notes %}
+                                    <p><strong>မှတ်ချက်:</strong> {{ payment.admin_notes }}</p>
+                                {% endif %}
+                                <a href="{% url 'upload_payment' payment.course.slug %}" class="btn btn-primary mt-2">
+                                    <i class="bi bi-arrow-clockwise"></i> ပြန်လည်တင်သွင်းမည်
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Payment Details -->
+                    <h6 class="border-bottom pb-2">ငွေပေးချေမှု အသေးစိတ်</h6>
+                    <table class="table">
+                        <tr>
+                            <th width="40%">သင်ခန်းစာ:</th>
+                            <td>{{ payment.course.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>ငွေပမာဏ:</th>
+                            <td><strong class="text-primary">{{ payment.amount }} ကျပ်</strong></td>
+                        </tr>
+                        <tr>
+                            <th>ငွေပေးချေမှုနည်းလမ်း:</th>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Transaction ID:</th>
+                            <td><code>{{ payment.transaction_id }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>တင်သွင်းသည့်ရက်:</th>
+                            <td>{{ payment.created_at|date:"d M Y, h:i A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>အခြေအနေ:</th>
+                            <td>
+                                {% if payment.status == 'pending' %}
+                                    <span class="badge bg-warning">စောင့်ဆိုင်းနေဆဲ</span>
+                                {% elif payment.status == 'approved' %}
+                                    <span class="badge bg-success">အတည်ပြုပြီး</span>
+                                {% elif payment.status == 'rejected' %}
+                                    <span class="badge bg-danger">ငြင်းပယ်</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if payment.reviewed_by %}
+                        <tr>
+                            <th>စိစစ်သူ:</th>
+                            <td>{{ payment.reviewed_by.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>စိစစ်သည့်ရက်:</th>
+                            <td>{{ payment.reviewed_at|date:"d M Y, h:i A" }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+
+                    <!-- Receipt -->
+                    {% if payment.receipt %}
+                    <h6 class="border-bottom pb-2 mt-4">တင်သွင်းထားသော ပြေစာ</h6>
+                    <div class="text-center">
+                        <img src="{{ payment.receipt.url }}" class="img-fluid rounded shadow" alt="Receipt" style="max-height: 500px;">
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'my_payments' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-list"></i> ငွေပေးချေမှု မှတ်တမ်းများ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
