@@ -5,6 +5,7 @@ Implements custom user model with role-based access control.
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.core.validators import FileExtensionValidator
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from core.models import TimeStampedModel
 from core.utils import (
     generate_unique_filename,
@@ -154,35 +155,23 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         """Override save to process profile picture."""
-        # Process profile picture if it's being uploaded
-        if self.profile_picture and hasattr(self.profile_picture, 'file'):
+        # Only process if a new file is being uploaded (not just updating other fields)
+        if self.profile_picture and isinstance(self.profile_picture, (InMemoryUploadedFile, TemporaryUploadedFile)):
             try:
-                # Check if this is a new upload (not already processed)
-                if not self.pk or (self.pk and self._state.adding is False):
-                    # Try to get the old instance
-                    try:
-                        old_instance = User.objects.get(pk=self.pk)
-                        # Only process if the file has changed
-                        if old_instance.profile_picture != self.profile_picture:
-                            self.profile_picture = process_uploaded_image(
-                                self.profile_picture,
-                                max_width=800,
-                                max_height=800,
-                                quality=85,
-                                format='JPEG'
-                            )
-                    except User.DoesNotExist:
-                        # New user, process the image
-                        self.profile_picture = process_uploaded_image(
-                            self.profile_picture,
-                            max_width=800,
-                            max_height=800,
-                            quality=85,
-                            format='JPEG'
-                        )
+                # Process the uploaded image
+                self.profile_picture = process_uploaded_image(
+                    self.profile_picture,
+                    max_width=800,
+                    max_height=800,
+                    quality=85,
+                    format='JPEG'
+                )
             except Exception as e:
                 # Log error but don't prevent save
-                print(f"Error processing profile picture: {e}")
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error processing profile picture for user {self.email}: {e}")
+                # Continue with save even if image processing fails
 
         super().save(*args, **kwargs)
 

@@ -4,6 +4,7 @@ Comprehensive course structure with categories, sections, and lessons.
 """
 from django.db import models
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from django.conf import settings
 from core.models import TimeStampedModel, SoftDeleteModel, PublishableModel
 from core.utils import (
@@ -207,36 +208,23 @@ class Course(SoftDeleteModel, PublishableModel):
 
     def save(self, *args, **kwargs):
         """Override save to process thumbnail image."""
-        # Process thumbnail if it's being uploaded
-        if self.thumbnail and hasattr(self.thumbnail, 'file'):
+        # Only process if a new file is being uploaded
+        if self.thumbnail and isinstance(self.thumbnail, (InMemoryUploadedFile, TemporaryUploadedFile)):
             try:
-                # Check if this is a new upload or update
-                if not self.pk:
-                    # New course, process the image
-                    self.thumbnail = process_uploaded_image(
-                        self.thumbnail,
-                        max_width=1200,
-                        max_height=675,  # 16:9 aspect ratio
-                        quality=85,
-                        format='JPEG'
-                    )
-                else:
-                    # Existing course, check if thumbnail changed
-                    try:
-                        old_instance = Course.objects.get(pk=self.pk)
-                        if old_instance.thumbnail != self.thumbnail:
-                            self.thumbnail = process_uploaded_image(
-                                self.thumbnail,
-                                max_width=1200,
-                                max_height=675,
-                                quality=85,
-                                format='JPEG'
-                            )
-                    except Course.DoesNotExist:
-                        pass
+                # Process the uploaded image
+                self.thumbnail = process_uploaded_image(
+                    self.thumbnail,
+                    max_width=1200,
+                    max_height=675,  # 16:9 aspect ratio
+                    quality=85,
+                    format='JPEG'
+                )
             except Exception as e:
                 # Log error but don't prevent save
-                print(f"Error processing course thumbnail: {e}")
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error processing course thumbnail for {self.title}: {e}")
+                # Continue with save even if image processing fails
 
         super().save(*args, **kwargs)
 
