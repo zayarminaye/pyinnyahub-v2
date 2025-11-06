@@ -9,11 +9,11 @@ echo "🚀 Starting build process..."
 echo "📦 Installing Python dependencies..."
 pip install -r requirements.txt
 
-echo "🗂️  Collecting static files..."
-python manage.py collectstatic --no-input
-
 echo "🗄️  Running database migrations..."
 python manage.py migrate
+
+echo "🗂️  Collecting static files..."
+python manage.py collectstatic --no-input
 
 echo "📧 Initializing notification settings..."
 python manage.py init_notification_settings || echo "⚠️  Notification settings may already exist"
