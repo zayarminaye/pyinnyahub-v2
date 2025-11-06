@@ -317,12 +317,15 @@ def instructor_dashboard_view(request):
     courses = Course.objects.filter(instructor=request.user).order_by('-created_at')
     draft_courses = courses.filter(status='draft')
     pending_courses = courses.filter(status='pending')
+    rejected_courses = courses.filter(status='rejected')
     published_courses = courses.filter(status='approved', is_published=True)
 
     context = {
         'courses': courses[:10],
         'draft_count': draft_courses.count(),
         'pending_count': pending_courses.count(),
+        'rejected_count': rejected_courses.count(),
+        'rejected_courses': rejected_courses,  # Pass rejected courses to show rejection reasons
         'published_count': published_courses.count(),
     }
     return render(request, 'dashboards/instructor.html', context)

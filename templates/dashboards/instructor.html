@@ -7,7 +7,7 @@
     <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Instructor Dashboard</h2>
 
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-secondary text-white">
                 <div class="card-body">
                     <h5><i class="bi bi-file-earmark"></i> Draft</h5>
@@ -15,7 +15,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5><i class="bi bi-clock"></i> Pending Review</h5>
@@ -23,7 +23,15 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-x-circle"></i> Rejected</h5>
+                    <h2>{{ rejected_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5><i class="bi bi-check-circle"></i> Published</h5>
@@ -32,6 +40,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Rejected Courses Section -->
+    {% if rejected_courses %}
+    <div class="alert alert-danger alert-permanent border-start border-danger border-4 mb-4" role="alert">
+        <h5 class="alert-heading">
+            <i class="bi bi-exclamation-triangle-fill"></i> သင့်တွင် ငြင်းပယ်ခံခဲ့ရသော သင်ခန်းစာများ ရှိပါသည်
+        </h5>
+        <hr>
+        <p class="mb-3">အောက်ပါ သင်ခန်းစာများကို Admin မှ ငြင်းပယ်ခဲ့ပါသည်။ ငြင်းပယ်ခြင်းအကြောင်းရင်းကို ဖတ်ရှုပြီး ပြုပြင်နိုင်ပါသည်။</p>
+
+        {% for course in rejected_courses %}
+        <div class="card mb-3 border-danger">
+            <div class="card-body">
+                <h6 class="card-title text-danger">
+                    <i class="bi bi-book"></i> {{ course.title }}
+                </h6>
+                <p class="mb-2"><strong>ငြင်းပယ်သည့် အကြောင်းရင်း:</strong></p>
+                <div class="bg-light p-3 rounded mb-3">
+                    <p class="mb-0">{{ course.rejection_reason|default:"မဖော်ပြထားပါ" }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/admin/courses/course/{{ course.id }}/change/" class="btn btn-sm btn-warning" target="_blank">
+                        <i class="bi bi-pencil-square"></i> ပြုပြင်မည် (Admin Panel)
+                    </a>
+                    <small class="text-muted align-self-center">
+                        ငြင်းပယ်သည့်ရက်: {{ course.reviewed_at|date:"d/m/Y H:i" }}
+                        {% if course.reviewed_by %}| Admin: {{ course.reviewed_by.get_full_name }}{% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle"></i> <strong>သတိပြုရန်:</strong> Admin Panel မှတစ်ဆင့် သင်ခန်းစာကို ပြုပြင်ပြီး status ကို "Pending Review" သို့ ပြောင်းလိုက်ပါက Admin မှ ထပ်မံ သုံးသပ်ပါမည်။ ငြင်းပယ်ခံခဲ့သော သင်ခန်းစာများကို **ဖျက်ခြင်း မပြုလုပ်ပါ** - ၎င်းတို့ကို audit purpose အတွက် သိမ်းဆည်းထားပါသည်။
+        </div>
+    </div>
+    {% endif %}
 
     <div class="card">
         <div class="card-header">

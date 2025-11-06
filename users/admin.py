@@ -188,27 +188,13 @@ class InstructorApplicationAdmin(admin.ModelAdmin):
     approve_applications.short_description = '✅ Approve selected applications'
 
     def reject_applications(self, request, queryset):
-        """Bulk reject selected applications."""
-        rejected_count = 0
-        for application in queryset.filter(status='pending'):
-            try:
-                reason = 'Rejected by admin'
-                application.reject(request.user, reason)
-                rejected_count += 1
-            except Exception as e:
-                self.message_user(
-                    request,
-                    f'Error rejecting {application.user.email}: {str(e)}',
-                    level='error'
-                )
-
-        if rejected_count > 0:
-            self.message_user(
-                request,
-                f'Successfully rejected {rejected_count} application(s).',
-                level='success'
-            )
-    reject_applications.short_description = '❌ Reject selected applications'
+        """Bulk reject selected applications - Note: Rejection reason must be set individually."""
+        self.message_user(
+            request,
+            'To reject applications with proper reasons, please edit each application individually and provide a detailed rejection reason for the applicant.',
+            level='warning'
+        )
+    reject_applications.short_description = '❌ Reject applications (requires individual reasons)'
 
     def save_model(self, request, obj, form, change):
         """Handle manual status changes from detail page."""
@@ -219,13 +205,31 @@ class InstructorApplicationAdmin(admin.ModelAdmin):
             if old_obj.status != 'approved' and obj.status == 'approved':
                 obj.approve(request.user)
                 self.message_user(request, 'Application approved successfully!', level='success')
+                # Log the action
+                self.log_change(request, obj, f'Approved by {request.user.email} - User promoted to instructor')
                 return  # approve() already saves
 
             # If status changed to rejected
             elif old_obj.status != 'rejected' and obj.status == 'rejected':
-                reason = obj.rejection_reason or 'Rejected by admin'
+                if not obj.rejection_reason or obj.rejection_reason.strip() == '':
+                    self.message_user(
+                        request,
+                        'Error: Rejection reason is REQUIRED when rejecting an application. Please provide a detailed reason for the applicant.',
+                        level='error'
+                    )
+                    obj.status = old_obj.status  # Revert status
+                    super().save_model(request, obj, form, change)
+                    return
+
+                reason = obj.rejection_reason
                 obj.reject(request.user, reason)
-                self.message_user(request, 'Application rejected.', level='warning')
+                self.message_user(
+                    request,
+                    f'Application rejected. {obj.user.get_full_name()} will see the rejection reason.',
+                    level='warning'
+                )
+                # Log the action
+                self.log_change(request, obj, f'Rejected by {request.user.email} - Reason: {reason}')
                 return  # reject() already saves
 
         super().save_model(request, obj, form, change)
