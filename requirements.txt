@@ -1,0 +1,34 @@
+# Core Django
+Django==4.2.11
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+
+# Database (PostgreSQL support for future scaling)
+psycopg2-binary==2.9.9
+
+# Environment variables
+python-decouple==3.8
+
+# Image handling
+Pillow==10.2.0
+
+# Background tasks
+django-apscheduler==0.6.2
+
+# CORS headers (for future React migration)
+django-cors-headers==4.3.1
+
+# Django filters
+django-filter==23.5
+
+# Markdown support (for course content)
+markdown==3.5.2
+
+# Excel export
+openpyxl==3.1.2
+
+# Timezone support
+pytz==2024.1
+
+# Password validation
+argon2-cffi==23.1.0
