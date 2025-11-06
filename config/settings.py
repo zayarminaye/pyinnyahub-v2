@@ -158,7 +158,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else 
 # ==============================================================================
 
 # Determine which storage backend to use
-USE_CLOUDINARY = config('USE_CLOUDINARY', default=True, cast=bool)
+USE_CLOUDINARY = config('USE_CLOUDINARY', default=False, cast=bool)
 USE_AWS_S3 = config('USE_AWS_S3', default=False, cast=bool)
 
 # Cloudinary Configuration (MVP - Free tier: 25GB storage, 25GB bandwidth/month)
@@ -168,8 +168,8 @@ if USE_CLOUDINARY:
         'API_KEY': config('CLOUDINARY_API_KEY', default=''),
         'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
     }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = '/media/'  # Cloudinary will handle the actual URL
+    DEFAULT_STORAGE_BACKEND = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # AWS S3 Configuration (For Scaling - Prepared but not active yet)
 elif USE_AWS_S3:
@@ -182,19 +182,19 @@ elif USE_AWS_S3:
         'CacheControl': 'max-age=86400',
     }
     AWS_DEFAULT_ACL = 'public-read'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    DEFAULT_STORAGE_BACKEND = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Local Storage (Development fallback)
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    DEFAULT_STORAGE_BACKEND = 'django.core.files.storage.FileSystemStorage'
 
-# WhiteNoise - Efficient static file serving in production
-# Compresses files and caches them for faster loading
+# Django 4.2+ STORAGES configuration (replaces DEFAULT_FILE_STORAGE)
 STORAGES = {
     "default": {
-        "BACKEND": DEFAULT_FILE_STORAGE if 'DEFAULT_FILE_STORAGE' in locals() else "django.core.files.storage.FileSystemStorage",
+        "BACKEND": DEFAULT_STORAGE_BACKEND,
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
