@@ -22,13 +22,13 @@ urlpatterns = [
     # Instructor Application
     path('apply-instructor/', views.apply_instructor_view, name='apply_instructor'),
 
-    # Admin Approval Views
-    path('admin/payment/<int:payment_id>/approve/', views.admin_approve_payment_view, name='admin_approve_payment'),
-    path('admin/payment/<int:payment_id>/reject/', views.admin_reject_payment_view, name='admin_reject_payment'),
-    path('admin/course/<int:course_id>/approve/', views.admin_approve_course_view, name='admin_approve_course'),
-    path('admin/course/<int:course_id>/reject/', views.admin_reject_course_view, name='admin_reject_course'),
-    path('admin/instructor/<int:application_id>/approve/', views.admin_approve_instructor_view, name='admin_approve_instructor'),
-    path('admin/instructor/<int:application_id>/reject/', views.admin_reject_instructor_view, name='admin_reject_instructor'),
+    # Admin Approval Views (custom dashboard - using /manage/ to avoid conflict with Django admin)
+    path('manage/payment/<int:payment_id>/approve/', views.admin_approve_payment_view, name='admin_approve_payment'),
+    path('manage/payment/<int:payment_id>/reject/', views.admin_reject_payment_view, name='admin_reject_payment'),
+    path('manage/course/<int:course_id>/approve/', views.admin_approve_course_view, name='admin_approve_course'),
+    path('manage/course/<int:course_id>/reject/', views.admin_reject_course_view, name='admin_reject_course'),
+    path('manage/instructor/<int:application_id>/approve/', views.admin_approve_instructor_view, name='admin_approve_instructor'),
+    path('manage/instructor/<int:application_id>/reject/', views.admin_reject_instructor_view, name='admin_reject_instructor'),
 
     # API Views
     path('api/auth/register/', views.RegisterAPIView.as_view(), name='api_register'),
