@@ -525,30 +525,32 @@ def apply_instructor_view(request):
             return redirect('dashboard')
 
     if request.method == 'POST':
+        # Get form data matching actual model fields
         expertise = request.POST.get('expertise', '').strip()
-        years_of_experience = request.POST.get('years_of_experience')
-        bio = request.POST.get('bio', '').strip()
-        portfolio_url = request.POST.get('portfolio_url', '').strip()
+        experience = request.POST.get('experience', '').strip()
+        education = request.POST.get('education', '').strip()
+        motivation = request.POST.get('motivation', '').strip()
+        resume = request.FILES.get('resume')
+        certificates = request.FILES.get('certificates')
 
         # Preserve form data
         form_data = {
             'expertise': expertise,
-            'years_of_experience': years_of_experience,
-            'bio': bio,
-            'portfolio_url': portfolio_url,
+            'experience': experience,
+            'education': education,
+            'motivation': motivation,
         }
 
         # Validation
         errors = []
-        if not all([expertise, years_of_experience, bio]):
-            errors.append("ကျေးဇူးပြု၍ အချက်အလက်အားလုံး ဖြည့်ပေးပါ။")
+        if not all([expertise, experience, motivation]):
+            errors.append("ကျေးဇူးပြု၍ လိုအပ်သော အချက်အလက်များကို ဖြည့်ပေးပါ။")
 
-        try:
-            years = int(years_of_experience)
-            if years < 0:
-                errors.append("အတွေ့အကြုံနှစ် မှန်ကန်မှု မရှိပါ။")
-        except (ValueError, TypeError):
-            errors.append("အတွေ့အကြုံနှစ် မှန်ကန်မှု မရှိပါ။")
+        if experience and len(experience) < 50:
+            errors.append("အတွေ့အကြုံဖော်ပြချက် အနည်းဆုံး ၅၀ စာလုံး ရှိရပါမည်။")
+
+        if motivation and len(motivation) < 50:
+            errors.append("လျှောက်ထားရခြင်း အကြောင်းပြချက် အနည်းဆုံး ၅၀ စာလုံး ရှိရပါမည်။")
 
         if errors:
             for error in errors:
@@ -557,17 +559,31 @@ def apply_instructor_view(request):
 
         # Create application
         try:
-            InstructorApplication.objects.create(
+            application = InstructorApplication.objects.create(
                 user=request.user,
                 expertise=expertise,
-                years_of_experience=years_of_experience,
-                bio=bio,
-                portfolio_url=portfolio_url if portfolio_url else None
+                experience=experience,
+                education=education if education else '',
+                motivation=motivation,
             )
+
+            # Save optional file uploads
+            if resume:
+                application.resume = resume
+            if certificates:
+                application.certificates = certificates
+
+            if resume or certificates:
+                application.save()
+
             messages.success(request, "လျှောက်ထားမှု အောင်မြင်ပါသည်။ Admin မှ စိစစ်ပြီး အကြောင်းကြားပါမည်။")
             return redirect('dashboard')
         except Exception as e:
-            messages.error(request, f"အမှား: {str(e)}")
+            # User-friendly error message
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Instructor application error: {e}")
+            messages.error(request, "လျှောက်ထားမှု မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။")
             return render(request, 'users/apply_instructor.html', {'form_data': form_data})
 
     return render(request, 'users/apply_instructor.html')

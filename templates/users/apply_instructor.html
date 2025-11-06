@@ -11,10 +11,20 @@
                     <h2 class="text-center mb-2">ဆရာ/ဆရာမ ဖြစ်ရန် လျှောက်ထားမည်</h2>
                     <p class="text-center text-muted mb-4">သင်၏ အတွေ့အကြုံနှင့် ကျွမ်းကျင်မှုများကို မျှဝေပါ</p>
 
-                    <form method="post">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="expertise" class="form-label">ကျွမ်းကျင်သော နယ်ပယ်</label>
+
+                        <div class="mb-4">
+                            <label for="expertise" class="form-label fw-bold">ကျွမ်းကျင်သော နယ်ပယ် <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="expertise" name="expertise"
                                    value="{{ form_data.expertise|default:'' }}"
                                    placeholder="ဥပမာ: Web Development, Python Programming, Data Science"
@@ -22,42 +32,54 @@
                             <div class="form-text">သင်သင်ကြားလိုသော ဘာသာရပ်များ</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="years_of_experience" class="form-label">အတွေ့အကြုံ (နှစ်)</label>
-                            <input type="number" class="form-control" id="years_of_experience" name="years_of_experience"
-                                   value="{{ form_data.years_of_experience|default:'' }}"
-                                   min="0" max="50" required>
-                            <div class="form-text">ဤနယ်ပယ်တွင် သင့်တွင် အလုပ်အတွေ့အကြုံ ဘယ်နှစ်နှစ် ရှိပါသလဲ</div>
+                        <div class="mb-4">
+                            <label for="experience" class="form-label fw-bold">အလုပ်/သင်ကြားရေး အတွေ့အကြုံ <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="experience" name="experience" rows="5" required
+                                      placeholder="သင်၏ အလုပ်အတွေ့အကြုံ၊ သင်ကြားခဲ့သော သင်ခန်းစာများ၊ ပရောဂျက်များကို ဖော်ပြပါ">{{ form_data.experience|default:'' }}</textarea>
+                            <div class="form-text">အနည်းဆုံး ၅၀ စာလုံး - သင့်၏ ပညာရပ်ဆိုင်ရာ သို့မဟုတ် သင်ကြားရေး အတွေ့အကြုံများကို အသေးစိတ် ဖော်ပြပါ</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="bio" class="form-label">အကြောင်းအရာ</label>
-                            <textarea class="form-control" id="bio" name="bio" rows="5" required
-                                      placeholder="သင်၏ ပညာရေးနောက်ခံ၊ အလုပ်အတွေ့အကြုံ၊ နှင့် သင်ကြားရေး ဆန္ဒများကို ဖော်ပြပါ">{{ form_data.bio|default:'' }}</textarea>
-                            <div class="form-text">အနည်းဆုံး ၁၀၀ စာလုံး ရှိရပါမည်</div>
+                        <div class="mb-4">
+                            <label for="education" class="form-label fw-bold">ပညာရေး နောက်ခံ</label>
+                            <textarea class="form-control" id="education" name="education" rows="3"
+                                      placeholder="သင့် ပညာရေး အရည်အချင်းများ၊ ဘွဲ့များ၊ အသိအမှတ်ပြုလက်မှတ်များ">{{ form_data.education|default:'' }}</textarea>
+                            <div class="form-text">ရွေးချယ်ခြင်း - သင့်ပညာရေး နောက်ခံကို ဖော်ပြပါ</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="portfolio_url" class="form-label">Portfolio URL (ရွေးချယ်ခြင်း)</label>
-                            <input type="url" class="form-control" id="portfolio_url" name="portfolio_url"
-                                   value="{{ form_data.portfolio_url|default:'' }}"
-                                   placeholder="https://yourwebsite.com">
-                            <div class="form-text">သင့် website, GitHub, LinkedIn သို့မဟုတ် ကိုယ်ပိုင် portfolio လင့်ခ်</div>
+                        <div class="mb-4">
+                            <label for="motivation" class="form-label fw-bold">ဆရာ/ဆရာမ ဖြစ်လိုရခြင်း အကြောင်းပြချက် <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="motivation" name="motivation" rows="4" required
+                                      placeholder="သင် ဆရာ/ဆရာမ ဖြစ်လိုရခြင်း အကြောင်းရင်းနှင့် သင့်ရည်မှန်းချက်များကို ဖော်ပြပါ">{{ form_data.motivation|default:'' }}</textarea>
+                            <div class="form-text">အနည်းဆုံး ၅၀ စာလုံး - သင် Pyinnya Hub တွင် ဘာကြောင့် သင်ကြားချင်သနည်း?</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="resume" class="form-label fw-bold">Resume/CV</label>
+                            <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx">
+                            <div class="form-text">ရွေးချယ်ခြင်း - PDF, DOC, or DOCX (max 5MB)</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="certificates" class="form-label fw-bold">အသိအမှတ်ပြု လက်မှတ်များ</label>
+                            <input type="file" class="form-control" id="certificates" name="certificates" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="form-text">ရွေးချယ်ခြင်း - သင့်တွင်ရှိသော လက်မှတ်များ (PDF, JPG, PNG - max 5MB)</div>
                         </div>
 
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i>
+                            <i class="bi bi-info-circle me-2"></i>
                             <strong>သတိပြုရန်:</strong> သင့်လျှောက်ထားမှုကို Admin မှ စိစစ်ပေးမည်ဖြစ်ပါသည်။ အတည်ပြုပြီးပါက သင်ခန်းစာများ ဖန်တီးနိုင်ပါမည်။
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2">
-                            <i class="bi bi-send"></i> လျှောက်ထားမည်
+                        <button type="submit" class="btn btn-primary w-100 py-3">
+                            <i class="bi bi-send me-2"></i> လျှောက်ထားမည်
                         </button>
                     </form>
 
                     <hr class="my-4">
                     <p class="text-center text-muted">
-                        <a href="{% url 'dashboard' %}"><i class="bi bi-arrow-left"></i> ဒက်ရှ်ဘုတ်သို့ ပြန်သွားမည်</a>
+                        <a href="{% url 'dashboard' %}" class="text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i> ဒက်ရှ်ဘုတ်သို့ ပြန်သွားမည်
+                        </a>
                     </p>
                 </div>
             </div>
