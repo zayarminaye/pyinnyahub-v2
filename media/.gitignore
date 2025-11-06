@@ -1,0 +1,5 @@
+# Ignore all files in media directory
+*
+# But keep this file and .gitkeep
+!.gitignore
+!.gitkeep
