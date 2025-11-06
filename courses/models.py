@@ -6,7 +6,13 @@ from django.db import models
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.conf import settings
 from core.models import TimeStampedModel, SoftDeleteModel, PublishableModel
-from core.utils import generate_unique_filename
+from core.utils import (
+    generate_unique_filename,
+    validate_course_thumbnail,
+    validate_lesson_video,
+    validate_lesson_attachment,
+    process_uploaded_image
+)
 
 
 class Category(TimeStampedModel):
@@ -107,15 +113,15 @@ class Course(SoftDeleteModel, PublishableModel):
     # Media
     thumbnail = models.ImageField(
         upload_to=generate_unique_filename,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])],
-        help_text='Course thumbnail image'
+        validators=[validate_course_thumbnail],
+        help_text='Course thumbnail image (min 800x450px, max 5MB, will be optimized)'
     )
     promo_video = models.FileField(
         upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm'])],
-        help_text='Promotional video'
+        validators=[validate_lesson_video],
+        help_text='Promotional video (max 500MB, MP4/WEBM)'
     )
 
     # Pricing and access
@@ -198,6 +204,41 @@ class Course(SoftDeleteModel, PublishableModel):
             models.Index(fields=['-enrollment_count']),
             models.Index(fields=['-rating_average']),
         ]
+
+    def save(self, *args, **kwargs):
+        """Override save to process thumbnail image."""
+        # Process thumbnail if it's being uploaded
+        if self.thumbnail and hasattr(self.thumbnail, 'file'):
+            try:
+                # Check if this is a new upload or update
+                if not self.pk:
+                    # New course, process the image
+                    self.thumbnail = process_uploaded_image(
+                        self.thumbnail,
+                        max_width=1200,
+                        max_height=675,  # 16:9 aspect ratio
+                        quality=85,
+                        format='JPEG'
+                    )
+                else:
+                    # Existing course, check if thumbnail changed
+                    try:
+                        old_instance = Course.objects.get(pk=self.pk)
+                        if old_instance.thumbnail != self.thumbnail:
+                            self.thumbnail = process_uploaded_image(
+                                self.thumbnail,
+                                max_width=1200,
+                                max_height=675,
+                                quality=85,
+                                format='JPEG'
+                            )
+                    except Course.DoesNotExist:
+                        pass
+            except Exception as e:
+                # Log error but don't prevent save
+                print(f"Error processing course thumbnail: {e}")
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -284,6 +325,29 @@ class Course(SoftDeleteModel, PublishableModel):
             models.Sum('duration_minutes')
         )['duration_minutes__sum'] or 0
 
+    def get_progress_for_user(self, user):
+        """
+        Calculate course completion percentage for a user.
+        Returns dict with progress stats.
+        """
+        total_lessons = self.total_lessons
+        if total_lessons == 0:
+            return {'percentage': 0, 'completed': 0, 'total': 0}
+
+        completed_lessons = LessonProgress.objects.filter(
+            user=user,
+            lesson__section__course=self,
+            is_completed=True
+        ).count()
+
+        percentage = int((completed_lessons / total_lessons) * 100)
+
+        return {
+            'percentage': percentage,
+            'completed': completed_lessons,
+            'total': total_lessons,
+        }
+
 
 class Section(TimeStampedModel):
     """
@@ -336,12 +400,13 @@ class Lesson(TimeStampedModel):
 
     # Content
     description = models.TextField(blank=True, null=True)
-    video_url = models.URLField(blank=True, null=True, help_text='Video file or external URL')
+    video_url = models.URLField(blank=True, null=True, help_text='External video URL (YouTube, Vimeo, etc.)')
     video_file = models.FileField(
         upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm', 'mov'])]
+        validators=[validate_lesson_video],
+        help_text='Upload video file (max 500MB, MP4/WEBM/MOV)'
     )
     text_content = models.TextField(blank=True, null=True, help_text='Markdown or HTML content')
     duration_minutes = models.PositiveIntegerField(default=0, help_text='Lesson duration in minutes')
@@ -357,6 +422,26 @@ class Lesson(TimeStampedModel):
     is_preview = models.BooleanField(
         default=False,
         help_text='Allow preview without enrollment'
+    )
+
+    # Download controls
+    allow_video_download = models.BooleanField(
+        default=False,
+        help_text='Allow students to download video file'
+    )
+    allow_attachment_download = models.BooleanField(
+        default=True,
+        help_text='Allow students to download attachments'
+    )
+
+    # Admin approval
+    is_approved = models.BooleanField(
+        default=False,
+        help_text='Admin approved this lesson content'
+    )
+    requires_approval = models.BooleanField(
+        default=True,
+        help_text='This lesson requires admin approval before publishing'
     )
 
     class Meta:
@@ -383,9 +468,8 @@ class LessonAttachment(TimeStampedModel):
     title = models.CharField(max_length=255)
     file = models.FileField(
         upload_to=generate_unique_filename,
-        validators=[FileExtensionValidator(
-            allowed_extensions=['pdf', 'doc', 'docx', 'ppt', 'pptx', 'zip', 'rar']
-        )]
+        validators=[validate_lesson_attachment],
+        help_text='Lesson attachment (max 50MB, PDF/DOC/PPT/ZIP)'
     )
     file_size = models.PositiveIntegerField(help_text='File size in bytes')
 
@@ -443,3 +527,80 @@ class Wishlist(TimeStampedModel):
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.course.title}"
+
+
+class LessonProgress(TimeStampedModel):
+    """
+    Track student progress through lessons.
+    Records when lessons are viewed and completed.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='lesson_progress'
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name='progress_records'
+    )
+    subscription = models.ForeignKey(
+        'subscriptions.Subscription',
+        on_delete=models.CASCADE,
+        related_name='lesson_progress',
+        null=True,
+        blank=True
+    )
+
+    # Progress tracking
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    time_spent_seconds = models.PositiveIntegerField(default=0, help_text='Total time spent on this lesson in seconds')
+    last_position_seconds = models.PositiveIntegerField(default=0, help_text='Last video position for resume')
+
+    # Engagement
+    view_count = models.PositiveIntegerField(default=0)
+    first_viewed_at = models.DateTimeField(null=True, blank=True)
+    last_viewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'lesson_progress'
+        verbose_name = 'Lesson Progress'
+        verbose_name_plural = 'Lesson Progress Records'
+        unique_together = ['user', 'lesson']
+        ordering = ['-last_viewed_at']
+        indexes = [
+            models.Index(fields=['user', 'is_completed']),
+            models.Index(fields=['lesson', 'is_completed']),
+        ]
+
+    def __str__(self):
+        status = "✓ Completed" if self.is_completed else "In Progress"
+        return f"{self.user.get_full_name()} - {self.lesson.title} ({status})"
+
+    def mark_complete(self):
+        """Mark lesson as completed."""
+        from django.utils import timezone
+        if not self.is_completed:
+            self.is_completed = True
+            self.completed_at = timezone.now()
+            self.save(update_fields=['is_completed', 'completed_at'])
+
+    def record_view(self):
+        """Record a lesson view."""
+        from django.utils import timezone
+        self.view_count += 1
+        self.last_viewed_at = timezone.now()
+        if not self.first_viewed_at:
+            self.first_viewed_at = timezone.now()
+        self.save(update_fields=['view_count', 'last_viewed_at', 'first_viewed_at'])
+
+    def update_position(self, position_seconds):
+        """Update video playback position for resume."""
+        self.last_position_seconds = position_seconds
+        self.save(update_fields=['last_position_seconds'])
+
+    def add_time_spent(self, seconds):
+        """Add time spent on this lesson."""
+        self.time_spent_seconds += seconds
+        self.save(update_fields=['time_spent_seconds'])

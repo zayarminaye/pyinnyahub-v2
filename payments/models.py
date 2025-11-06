@@ -6,7 +6,7 @@ from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from core.models import TimeStampedModel
-from core.utils import generate_unique_filename
+from core.utils import generate_unique_filename, validate_payment_receipt
 
 
 class PaymentManager(models.Manager):
@@ -71,10 +71,8 @@ class Payment(TimeStampedModel):
     # Receipt upload
     receipt = models.FileField(
         upload_to=generate_unique_filename,
-        validators=[FileExtensionValidator(
-            allowed_extensions=['jpg', 'jpeg', 'png', 'pdf']
-        )],
-        help_text='Payment receipt image or PDF'
+        validators=[validate_payment_receipt],
+        help_text='Payment receipt (max 10MB, JPG/PNG/PDF)'
     )
 
     # Transaction details (optional)

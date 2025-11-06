@@ -5,7 +5,7 @@ from .models import Category, Course, Section, Lesson
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     """Admin interface for course categories."""
-    list_display = ('name', 'slug', 'is_active', 'course_count', 'created_at')
+    list_display = ('name', 'slug', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
@@ -15,7 +15,7 @@ class SectionInline(admin.TabularInline):
     """Inline admin for course sections."""
     model = Section
     extra = 0
-    fields = ('title', 'order', 'is_published')
+    fields = ('title', 'order')
 
 
 @admin.register(Course)
@@ -55,14 +55,14 @@ class LessonInline(admin.TabularInline):
     """Inline admin for section lessons."""
     model = Lesson
     extra = 0
-    fields = ('title', 'order', 'lesson_type', 'duration', 'is_free')
+    fields = ('title', 'order', 'content_type', 'duration_minutes', 'is_preview')
 
 
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
     """Admin interface for course sections."""
-    list_display = ('title', 'course', 'order', 'is_published', 'lesson_count')
-    list_filter = ('is_published', 'created_at')
+    list_display = ('title', 'course', 'order', 'created_at')
+    list_filter = ('created_at',)
     search_fields = ('title', 'course__title')
     inlines = [LessonInline]
 
@@ -70,8 +70,27 @@ class SectionAdmin(admin.ModelAdmin):
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     """Admin interface for lessons."""
-    list_display = ('title', 'section', 'lesson_type', 'duration', 'order', 'is_free')
-    list_filter = ('lesson_type', 'is_free', 'created_at')
-    search_fields = ('title', 'content', 'section__title')
+    list_display = ('title', 'section', 'content_type', 'duration_minutes', 'order', 'is_preview', 'is_approved')
+    list_filter = ('content_type', 'is_preview', 'is_approved', 'requires_approval', 'created_at')
+    search_fields = ('title', 'description', 'section__title')
     readonly_fields = ('created_at', 'updated_at')
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('section', 'title', 'content_type', 'order', 'description', 'duration_minutes')
+        }),
+        ('Content', {
+            'fields': ('video_url', 'video_file', 'text_content')
+        }),
+        ('Download Controls', {
+            'fields': ('allow_video_download', 'allow_attachment_download')
+        }),
+        ('Access & Approval', {
+            'fields': ('is_preview', 'is_approved', 'requires_approval')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 

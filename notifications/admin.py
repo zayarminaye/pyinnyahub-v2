@@ -5,32 +5,16 @@ from .models import NotificationSettings
 @admin.register(NotificationSettings)
 class NotificationSettingsAdmin(admin.ModelAdmin):
     """Admin interface for notification settings."""
-    list_display = ('email_enabled', 'payment_approved', 'payment_rejected', 'course_approved')
+    list_display = ('event', 'is_enabled', 'send_email', 'send_in_app')
+    list_filter = ('is_enabled', 'send_email', 'send_in_app')
+    search_fields = ('event',)
 
     fieldsets = (
-        ('Email Settings', {
-            'fields': ('email_enabled', 'email_host', 'email_port', 'email_host_user',
-                      'email_host_password', 'email_use_tls', 'default_from_email')
+        ('Notification Event', {
+            'fields': ('event',)
         }),
-        ('Payment Notifications', {
-            'fields': ('payment_approved', 'payment_rejected')
-        }),
-        ('Course Notifications', {
-            'fields': ('course_approved', 'course_rejected')
-        }),
-        ('User Notifications', {
-            'fields': ('registration_confirmation', 'instructor_application_approved', 'instructor_application_rejected')
-        }),
-        ('Subscription Notifications', {
-            'fields': ('subscription_expiring', 'subscription_expired')
+        ('Settings', {
+            'fields': ('is_enabled', 'send_email', 'send_in_app')
         }),
     )
-
-    def has_add_permission(self, request):
-        """Only allow one settings instance."""
-        return not NotificationSettings.objects.exists()
-
-    def has_delete_permission(self, request, obj=None):
-        """Prevent deletion of settings."""
-        return False
 

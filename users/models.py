@@ -6,7 +6,13 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.core.validators import FileExtensionValidator
 from core.models import TimeStampedModel
-from core.utils import generate_unique_filename
+from core.utils import (
+    generate_unique_filename,
+    validate_profile_picture,
+    validate_instructor_resume,
+    validate_instructor_certificate,
+    process_uploaded_image
+)
 
 
 class UserManager(BaseUserManager):
@@ -73,7 +79,8 @@ class User(AbstractUser):
         upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])]
+        validators=[validate_profile_picture],
+        help_text='Profile picture (max 5MB, JPG/PNG, will be optimized)'
     )
 
     # Additional fields
@@ -145,6 +152,40 @@ class User(AbstractUser):
             return True
         return False
 
+    def save(self, *args, **kwargs):
+        """Override save to process profile picture."""
+        # Process profile picture if it's being uploaded
+        if self.profile_picture and hasattr(self.profile_picture, 'file'):
+            try:
+                # Check if this is a new upload (not already processed)
+                if not self.pk or (self.pk and self._state.adding is False):
+                    # Try to get the old instance
+                    try:
+                        old_instance = User.objects.get(pk=self.pk)
+                        # Only process if the file has changed
+                        if old_instance.profile_picture != self.profile_picture:
+                            self.profile_picture = process_uploaded_image(
+                                self.profile_picture,
+                                max_width=800,
+                                max_height=800,
+                                quality=85,
+                                format='JPEG'
+                            )
+                    except User.DoesNotExist:
+                        # New user, process the image
+                        self.profile_picture = process_uploaded_image(
+                            self.profile_picture,
+                            max_width=800,
+                            max_height=800,
+                            quality=85,
+                            format='JPEG'
+                        )
+            except Exception as e:
+                # Log error but don't prevent save
+                print(f"Error processing profile picture: {e}")
+
+        super().save(*args, **kwargs)
+
     def get_instructor_stats(self):
         """Get instructor statistics (courses, students, earnings)."""
         if not self.is_instructor:
@@ -205,13 +246,15 @@ class InstructorApplication(TimeStampedModel):
         upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx'])]
+        validators=[validate_instructor_resume],
+        help_text='Resume/CV (max 5MB, PDF/DOC/DOCX)'
     )
     certificates = models.FileField(
         upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])]
+        validators=[validate_instructor_certificate],
+        help_text='Certificates (max 5MB, PDF/JPG/PNG)'
     )
 
     # Review fields
