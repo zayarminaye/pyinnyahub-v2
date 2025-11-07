@@ -123,12 +123,14 @@ class InstructorApplicationAdmin(admin.ModelAdmin):
 
     def has_resume(self, obj):
         """Show if resume is uploaded."""
-        return '✅' if obj.resume else '❌'
+        # Check if field has a file name (works with both local and Cloudinary storage)
+        return '✅' if obj.resume and obj.resume.name else '❌'
     has_resume.short_description = 'Resume'
 
     def has_certificates(self, obj):
         """Show if certificates are uploaded."""
-        return '✅' if obj.certificates else '❌'
+        # Check if field has a file name (works with both local and Cloudinary storage)
+        return '✅' if obj.certificates and obj.certificates.name else '❌'
     has_certificates.short_description = 'Certificates'
 
     def resume_link(self, obj):
