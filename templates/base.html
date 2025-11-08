@@ -642,7 +642,7 @@
                                 <i class="bi bi-person-circle"></i> {{ user.get_full_name }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                {% if user.is_admin_user or user.is_staff %}
+                                {% if user.role == 'admin' or user.is_superuser %}
                                     <!-- Admin Menu -->
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear-fill"></i> Django Admin</a></li>
                                     <li><a class="dropdown-item" href="/admin/core/systemsettings/1/change/"><i class="bi bi-sliders"></i> System Settings</a></li>
@@ -652,6 +652,8 @@
                                     <!-- Instructor Menu -->
                                     <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> ပရိုဖိုင်</a></li>
                                     <li><a class="dropdown-item" href="{% url 'instructor_dashboard' %}"><i class="bi bi-easel"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ဖန်တီးမည်</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{% url 'my_subscriptions' %}"><i class="bi bi-book"></i> စာရင်းသွင်းထားသော သင်ခန်းစာများ</a></li>
                                     <li><a class="dropdown-item" href="{% url 'my_payments' %}"><i class="bi bi-credit-card"></i> ငွေပေးချေမှု မှတ်တမ်း</a></li>
                                 {% else %}
