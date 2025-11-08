@@ -335,6 +335,7 @@ def instructor_dashboard_view(request):
         return redirect('dashboard')
 
     from courses.models import Course
+    from subscriptions.models import Subscription
 
     courses = Course.objects.filter(instructor=request.user).order_by('-created_at')
     draft_courses = courses.filter(status='draft')
@@ -342,13 +343,27 @@ def instructor_dashboard_view(request):
     rejected_courses = courses.filter(status='rejected')
     published_courses = courses.filter(status='approved', is_published=True)
 
+    # Calculate total students enrolled in instructor's courses
+    total_students = Subscription.objects.filter(
+        course__instructor=request.user,
+        status='active'
+    ).values('user').distinct().count()
+
+    # Get recent enrollments
+    recent_enrollments = Subscription.objects.filter(
+        course__instructor=request.user,
+        status='active'
+    ).select_related('user', 'course').order_by('-created_at')[:5]
+
     context = {
         'courses': courses[:10],
-        'draft_count': draft_courses.count(),
+        'total_courses': courses.count(),
+        'total_students': total_students,
         'pending_count': pending_courses.count(),
         'rejected_count': rejected_courses.count(),
-        'rejected_courses': rejected_courses,  # Pass rejected courses to show rejection reasons
+        'rejected_courses': rejected_courses,
         'published_count': published_courses.count(),
+        'recent_enrollments': recent_enrollments,
     }
     return render(request, 'dashboards/instructor.html', context)
 
