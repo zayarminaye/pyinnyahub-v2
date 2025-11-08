@@ -135,7 +135,7 @@ class User(AbstractUser):
     @property
     def is_admin_user(self):
         """Check if user is an admin."""
-        return self.role == 'admin' or self.is_staff or self.is_superuser
+        return self.role == 'admin' or self.is_superuser
 
     def promote_to_instructor(self):
         """Promote student to instructor role and grant admin panel access."""
