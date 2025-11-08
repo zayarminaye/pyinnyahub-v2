@@ -6,7 +6,7 @@ import logging
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
-from .models import Notification, EmailLog
+from .models import Notification, EmailLog, NotificationSettings
 
 logger = logging.getLogger('pyinnyahub')
 
@@ -16,6 +16,45 @@ class NotificationService:
     Centralized service for handling all notifications.
     Sends both email and in-app notifications.
     """
+
+    @staticmethod
+    def _send_notification(event, user, notification_type, title, message,
+                          email_subject=None, email_message=None,
+                          related_object_type=None, related_object_id=None):
+        """
+        Unified method to send notifications respecting admin settings.
+
+        Args:
+            event: Event name from NotificationSettings.NOTIFICATION_EVENTS
+            user: User object to receive notification
+            notification_type: Type for in-app notification
+            title: Title for in-app notification
+            message: Message for in-app notification
+            email_subject: Subject for email (if different from title)
+            email_message: Body for email (if different from message)
+            related_object_type: Optional related object type
+            related_object_id: Optional related object ID
+        """
+        # Check if email should be sent
+        if NotificationSettings.should_send_email(event):
+            NotificationService._send_email(
+                recipient=user.email,
+                subject=email_subject or title,
+                message=email_message or message,
+                email_type=event,
+                user=user
+            )
+
+        # Check if in-app notification should be sent
+        if NotificationSettings.should_send_in_app(event):
+            NotificationService._create_notification(
+                user=user,
+                notification_type=notification_type,
+                title=title,
+                message=message,
+                related_object_type=related_object_type,
+                related_object_id=related_object_id
+            )
 
     @staticmethod
     def _send_email(recipient, subject, message, email_type=None, user=None):
@@ -94,8 +133,8 @@ class NotificationService:
     @classmethod
     def send_registration_confirmation(cls, user):
         """Send welcome email after successful registration."""
-        subject = f"Welcome to {settings.SITE_NAME}!"
-        message = f"""
+        email_subject = f"Welcome to {settings.SITE_NAME}!"
+        email_message = f"""
         Dear {user.get_full_name()},
 
         Welcome to {settings.SITE_NAME}! Your account has been successfully created.
@@ -109,12 +148,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(user.email, subject, message, email_type='registration', user=user)
-        cls._create_notification(
+        cls._send_notification(
+            event='registration',
             user=user,
             notification_type='registration',
             title='Welcome to Pyinnya Hub!',
-            message='Your account has been successfully created. Start exploring courses now!'
+            message='Your account has been successfully created. Start exploring courses now!',
+            email_subject=email_subject,
+            email_message=email_message
         )
 
     # ==========================================================================
@@ -123,8 +164,8 @@ class NotificationService:
     @classmethod
     def send_instructor_application_approved(cls, user):
         """Notify user that their instructor application was approved."""
-        subject = "Instructor Application Approved!"
-        message = f"""
+        email_subject = "Instructor Application Approved!"
+        email_message = f"""
         Dear {user.get_full_name()},
 
         Congratulations! Your instructor application has been approved.
@@ -140,19 +181,21 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(user.email, subject, message, email_type='instructor_approved', user=user)
-        cls._create_notification(
+        cls._send_notification(
+            event='instructor_approved',
             user=user,
             notification_type='instructor_application',
             title='Instructor Application Approved!',
-            message='Congratulations! You can now create and manage courses.'
+            message='Congratulations! You can now create and manage courses.',
+            email_subject=email_subject,
+            email_message=email_message
         )
 
     @classmethod
     def send_instructor_application_rejected(cls, user, reason):
         """Notify user that their instructor application was rejected."""
-        subject = "Instructor Application Update"
-        message = f"""
+        email_subject = "Instructor Application Update"
+        email_message = f"""
         Dear {user.get_full_name()},
 
         Thank you for your interest in becoming an instructor on {settings.SITE_NAME}.
@@ -167,12 +210,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(user.email, subject, message, email_type='instructor_rejected', user=user)
-        cls._create_notification(
+        cls._send_notification(
+            event='instructor_rejected',
             user=user,
             notification_type='instructor_application',
             title='Instructor Application Update',
-            message=f'Your application was not approved. Reason: {reason}'
+            message=f'Your application was not approved. Reason: {reason}',
+            email_subject=email_subject,
+            email_message=email_message
         )
 
     # ==========================================================================
@@ -184,8 +229,8 @@ class NotificationService:
         course_name = payment.course.title if payment.course else 'All Courses (Global Subscription)'
         expiry_text = f"until {subscription.expires_at.strftime('%B %d, %Y')}" if subscription.expires_at else "forever (Lifetime)"
 
-        subject = "Payment Approved - Access Granted!"
-        message = f"""
+        email_subject = "Payment Approved - Access Granted!"
+        email_message = f"""
         Dear {user.get_full_name()},
 
         Great news! Your payment has been approved.
@@ -203,12 +248,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(user.email, subject, message, email_type='payment_approved', user=user)
-        cls._create_notification(
+        cls._send_notification(
+            event='payment_approved',
             user=user,
             notification_type='payment',
             title='Payment Approved!',
             message=f'Your payment for {course_name} has been approved. Access granted!',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='payment',
             related_object_id=payment.id
         )
@@ -218,8 +265,8 @@ class NotificationService:
         """Notify user that their payment was rejected."""
         course_name = payment.course.title if payment.course else 'Global Subscription'
 
-        subject = "Payment Review Result"
-        message = f"""
+        email_subject = "Payment Review Result"
+        email_message = f"""
         Dear {user.get_full_name()},
 
         Your payment submission for {course_name} has been reviewed.
@@ -234,12 +281,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(user.email, subject, message, email_type='payment_rejected', user=user)
-        cls._create_notification(
+        cls._send_notification(
+            event='payment_rejected',
             user=user,
             notification_type='payment',
             title='Payment Not Approved',
             message=f'Your payment for {course_name} was not approved. Reason: {reason}',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='payment',
             related_object_id=payment.id
         )
@@ -250,8 +299,8 @@ class NotificationService:
     @classmethod
     def send_course_approved(cls, course):
         """Notify instructor that their course was approved."""
-        subject = f"Course Approved: {course.title}"
-        message = f"""
+        email_subject = f"Course Approved: {course.title}"
+        email_message = f"""
         Dear {course.instructor.get_full_name()},
 
         Congratulations! Your course "{course.title}" has been approved.
@@ -264,18 +313,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(
-            course.instructor.email,
-            subject,
-            message,
-            email_type='course_approved',
-            user=course.instructor
-        )
-        cls._create_notification(
+        cls._send_notification(
+            event='course_approved',
             user=course.instructor,
             notification_type='course',
             title='Course Approved!',
             message=f'Your course "{course.title}" has been approved.',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='course',
             related_object_id=course.id
         )
@@ -283,8 +328,8 @@ class NotificationService:
     @classmethod
     def send_course_rejected(cls, course, reason):
         """Notify instructor that their course was rejected."""
-        subject = f"Course Review: {course.title}"
-        message = f"""
+        email_subject = f"Course Review: {course.title}"
+        email_message = f"""
         Dear {course.instructor.get_full_name()},
 
         Your course "{course.title}" has been reviewed.
@@ -301,18 +346,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(
-            course.instructor.email,
-            subject,
-            message,
-            email_type='course_rejected',
-            user=course.instructor
-        )
-        cls._create_notification(
+        cls._send_notification(
+            event='course_rejected',
             user=course.instructor,
             notification_type='course',
             title='Course Needs Updates',
             message=f'Your course "{course.title}" requires updates. Feedback: {reason}',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='course',
             related_object_id=course.id
         )
@@ -326,8 +367,8 @@ class NotificationService:
         course_name = subscription.course.title if subscription.course else 'Global Subscription'
         days_remaining = subscription.days_remaining or 0
 
-        subject = f"Your {course_name} Access Expires Soon"
-        message = f"""
+        email_subject = f"Your {course_name} Access Expires Soon"
+        email_message = f"""
         Dear {subscription.user.get_full_name()},
 
         This is a reminder that your access to {course_name} will expire in {days_remaining} day(s).
@@ -342,18 +383,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(
-            subscription.user.email,
-            subject,
-            message,
-            email_type='subscription_expiry_reminder',
-            user=subscription.user
-        )
-        cls._create_notification(
+        cls._send_notification(
+            event='subscription_expiry_reminder',
             user=subscription.user,
             notification_type='subscription',
             title='Subscription Expiring Soon',
             message=f'Your access to {course_name} expires in {days_remaining} day(s).',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='subscription',
             related_object_id=subscription.id
         )
@@ -363,8 +400,8 @@ class NotificationService:
         """Notify user that their subscription has expired."""
         course_name = subscription.course.title if subscription.course else 'Global Subscription'
 
-        subject = f"Your {course_name} Access Has Expired"
-        message = f"""
+        email_subject = f"Your {course_name} Access Has Expired"
+        email_message = f"""
         Dear {subscription.user.get_full_name()},
 
         Your access to {course_name} has expired.
@@ -377,18 +414,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(
-            subscription.user.email,
-            subject,
-            message,
-            email_type='subscription_expired',
-            user=subscription.user
-        )
-        cls._create_notification(
+        cls._send_notification(
+            event='subscription_expired',
             user=subscription.user,
             notification_type='subscription',
             title='Subscription Expired',
             message=f'Your access to {course_name} has expired.',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='subscription',
             related_object_id=subscription.id
         )
@@ -399,8 +432,8 @@ class NotificationService:
     @classmethod
     def send_payout_completed(cls, payout):
         """Notify instructor that payout has been completed."""
-        subject = f"Payout Completed: {payout.net_amount} MMK"
-        message = f"""
+        email_subject = f"Payout Completed: {payout.net_amount} MMK"
+        email_message = f"""
         Dear {payout.instructor.get_full_name()},
 
         Your payout has been processed successfully!
@@ -418,18 +451,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(
-            payout.instructor.email,
-            subject,
-            message,
-            email_type='payout_completed',
-            user=payout.instructor
-        )
-        cls._create_notification(
+        cls._send_notification(
+            event='payout_completed',
             user=payout.instructor,
             notification_type='payout',
             title='Payout Completed!',
             message=f'Your payout of {payout.net_amount} MMK has been processed.',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='payout',
             related_object_id=payout.id
         )
@@ -437,8 +466,8 @@ class NotificationService:
     @classmethod
     def send_payout_cancelled(cls, payout, reason):
         """Notify instructor that payout was cancelled."""
-        subject = f"Payout Update: {payout.course.title}"
-        message = f"""
+        email_subject = f"Payout Update: {payout.course.title}"
+        email_message = f"""
         Dear {payout.instructor.get_full_name()},
 
         Your payout for {payout.course.title} has been cancelled.
@@ -451,18 +480,14 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(
-            payout.instructor.email,
-            subject,
-            message,
-            email_type='payout_cancelled',
-            user=payout.instructor
-        )
-        cls._create_notification(
+        cls._send_notification(
+            event='payout_cancelled',
             user=payout.instructor,
             notification_type='payout',
             title='Payout Cancelled',
             message=f'Your payout for {payout.course.title} has been cancelled.',
+            email_subject=email_subject,
+            email_message=email_message,
             related_object_type='payout',
             related_object_id=payout.id
         )
@@ -473,8 +498,8 @@ class NotificationService:
     @classmethod
     def send_password_reset_email(cls, user, reset_link):
         """Send password reset email."""
-        subject = "Password Reset Request"
-        message = f"""
+        email_subject = "Password Reset Request"
+        email_message = f"""
         Dear {user.get_full_name()},
 
         You requested to reset your password for {settings.SITE_NAME}.
@@ -490,4 +515,6 @@ class NotificationService:
         {settings.SITE_NAME} Team
         """
 
-        cls._send_email(user.email, subject, message, email_type='password_reset', user=user)
+        # Password reset only sends email, no in-app notification
+        if NotificationSettings.should_send_email('password_reset'):
+            cls._send_email(user.email, email_subject, email_message, email_type='password_reset', user=user)
