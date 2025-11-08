@@ -69,22 +69,38 @@ class StorageCategory:
 class FileUploadError(Exception):
     """Custom exception for file upload errors with user-friendly messages."""
 
-    def __init__(self, message: str, user_message: str = None, original_error: Exception = None):
+    def __init__(self, message: str, user_message: str = None, message_key: str = None, original_error: Exception = None, **context):
         """
         Args:
             message: Technical error message for logging
-            user_message: User-friendly message in Burmese/English
+            user_message: User-friendly message (if not using message_key)
+            message_key: Key to SystemMessage for editable messages
             original_error: Original exception if any
+            **context: Variables for message substitution
         """
         super().__init__(message)
-        self.user_message = user_message or self._get_default_user_message()
+
+        # Try to get message from SystemMessage first
+        if message_key:
+            from core.models import SystemMessage
+            self.user_message = SystemMessage.get(message_key, lang='both', **context)
+        elif user_message:
+            self.user_message = user_message
+        else:
+            self.user_message = self._get_default_user_message()
+
         self.original_error = original_error
 
     def _get_default_user_message(self):
-        return (
-            "ဖိုင်တင်ရာတွင် အမှားအယွင်း ရှိပါသည်။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။\n"
-            "Error uploading file. Please try again."
-        )
+        """Fallback if no message_key or user_message provided."""
+        try:
+            from core.models import SystemMessage
+            return SystemMessage.get('file_upload_generic_error', lang='both')
+        except:
+            return (
+                "ဖိုင်တင်ရာတွင် အမှားအယွင်း ရှိပါသည်။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။\n"
+                "Error uploading file. Please try again."
+            )
 
 
 class StorageService:
