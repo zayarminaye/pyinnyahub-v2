@@ -683,9 +683,9 @@
 
     <!-- Messages -->
     {% if messages %}
-        <div class="container mt-3">
+        <div class="container mt-3" id="django-messages">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show auto-dismiss" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -767,13 +767,14 @@
         }
     </script>
 
-    <!-- Auto-dismiss messages after 5 seconds -->
+    <!-- Auto-dismiss Django messages after 5 seconds -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get all alert messages
-            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            // Only auto-dismiss Django framework messages (login/logout/form submissions)
+            // NOT static informational alerts (empty states, dashboard info)
+            const djangoMessages = document.querySelectorAll('.auto-dismiss');
 
-            alerts.forEach(function(alert) {
+            djangoMessages.forEach(function(alert) {
                 // Auto-dismiss after 5 seconds (5000ms)
                 setTimeout(function() {
                     // Use Bootstrap's alert close method
