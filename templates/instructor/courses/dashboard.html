@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}ကျွန်ုပ်၏ သင်ခန်းစာများ - Instructor{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-journal-bookmark"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</h2>
+        <a href="{% url 'course_create_step1' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ဖန်တီးမည်
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Draft</small>
+                            <h3 class="mb-0">{{ draft_count }}</h3>
+                        </div>
+                        <i class="bi bi-file-earmark text-secondary" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Pending Review</small>
+                            <h3 class="mb-0">{{ pending_count }}</h3>
+                        </div>
+                        <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Approved</small>
+                            <h3 class="mb-0">{{ approved_count }}</h3>
+                        </div>
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Rejected</small>
+                            <h3 class="mb-0">{{ rejected_count }}</h3>
+                        </div>
+                        <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejected Courses Alert -->
+    {% if rejected_courses %}
+    <div class="alert alert-danger alert-permanent border-start border-danger border-4 mb-4" role="alert">
+        <h5 class="alert-heading">
+            <i class="bi bi-exclamation-triangle-fill"></i> သင့်တွင် ငြင်းပယ်ခံခဲ့ရသော သင်ခန်းစာများ ရှိပါသည်
+        </h5>
+        <hr>
+        <p class="mb-2">အောက်ပါ သင်ခန်းစာများကို Admin မှ ငြင်းပယ်ခဲ့ပါသည်။ ငြင်းပယ်ခြင်းအကြောင်းရင်းကို ဖတ်ရှုပြီး ပြုပြင်နိုင်ပါသည်။</p>
+        <ul class="mb-0">
+            {% for course in rejected_courses %}
+            <li>
+                <strong>{{ course.title }}</strong> -
+                <a href="{% url 'course_edit' course.id %}" class="alert-link">ပြုပြင်မည်</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-auto">
+                    <label class="form-label">Filter by Status:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">အားလုံး</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Review</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                {% if status_filter %}
+                <div class="col-auto">
+                    <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear Filter
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Courses List -->
+    {% if courses %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>သင်ခန်းစာ</th>
+                            <th>အခြေအနေ</th>
+                            <th>သင်တန်းကြေး</th>
+                            <th>ဖန်တီးသည့်ရက်</th>
+                            <th>လုပ်ဆောင်ချက်များ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if course.thumbnail %}
+                                    <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}"
+                                         class="rounded me-3" style="width: 60px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center text-white"
+                                         style="width: 60px; height: 40px; font-size: 1.5rem;">
+                                        <i class="bi bi-book"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ course.title }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ course.category.name }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if course.status == 'draft' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% elif course.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending Review</span>
+                                {% elif course.status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                    {% if course.is_published %}
+                                        <span class="badge bg-info">Published</span>
+                                    {% endif %}
+                                {% elif course.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ course.price|floatformat:0 }} ကျပ်</td>
+                            <td>{{ course.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'course_detail' course.slug %}"
+                                       class="btn btn-outline-primary"
+                                       title="ကြည့်မည်">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'course_edit' course.id %}"
+                                       class="btn btn-outline-secondary"
+                                       title="ပြုပြင်မည်">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'course_curriculum' course.id %}"
+                                       class="btn btn-outline-info"
+                                       title="Curriculum">
+                                        <i class="bi bi-list-ul"></i>
+                                    </a>
+                                    {% if course.status in 'draft,rejected' %}
+                                    <button type="button"
+                                            class="btn btn-outline-danger"
+                                            title="ဖျက်မည်"
+                                            onclick="confirmDelete({{ course.id }}, '{{ course.title }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if courses.has_other_pages %}
+    <nav aria-label="Course pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if courses.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ courses.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in courses.paginator.page_range %}
+            {% if courses.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > courses.number|add:'-3' and num < courses.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if courses.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ courses.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-journal-bookmark"></i>
+        </div>
+        <div class="empty-state-title">သင်ခန်းစာ မရှိသေးပါ</div>
+        <div class="empty-state-message">
+            {% if status_filter %}
+                "{{ status_filter|title }}" အခြေအနေဖြင့် သင်ခန်းစာ မတွေ့ရှိပါ။
+            {% else %}
+                သင်ခန်းစာ အသစ် ဖန်တီးပြီး သင်ကြားခြင်း ကို စတင်ပါ။
+            {% endif %}
+        </div>
+        <a href="{% url 'course_create_step1' %}" class="btn btn-primary empty-state-action">
+            <i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ဖန်တီးမည်
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<form method="post" id="deleteForm" style="display: none;">
+    {% csrf_token %}
+</form>
+
+<script>
+function confirmDelete(courseId, courseTitle) {
+    if (confirm(`သင်ခန်းစာ "${courseTitle}" ကို ဖျက်မှာ သေချာပါသလား?\n\nဤလုပ်ဆောင်မှုကို ပြန်ပြောင်း၍ မရနိုင်ပါ။`)) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/courses/instructor/${courseId}/delete/`;
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
