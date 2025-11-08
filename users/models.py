@@ -138,18 +138,20 @@ class User(AbstractUser):
         return self.role == 'admin' or self.is_staff or self.is_superuser
 
     def promote_to_instructor(self):
-        """Promote student to instructor role."""
+        """Promote student to instructor role and grant admin panel access."""
         if self.role == 'student':
             self.role = 'instructor'
-            self.save(update_fields=['role'])
+            self.is_staff = True  # Grant access to Django admin panel
+            self.save(update_fields=['role', 'is_staff'])
             return True
         return False
 
     def demote_to_student(self):
-        """Demote instructor to student role."""
+        """Demote instructor to student role and revoke admin panel access."""
         if self.role == 'instructor':
             self.role = 'student'
-            self.save(update_fields=['role'])
+            self.is_staff = False  # Revoke access to Django admin panel
+            self.save(update_fields=['role', 'is_staff'])
             return True
         return False
 
