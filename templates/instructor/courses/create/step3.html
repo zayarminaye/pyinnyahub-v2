@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}သင်ခန်းစာ ဖန်တီးမည် - Step 3{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ဖန်တီးမည်</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Indicator -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Progress</small>
+                            <small class="text-muted">Step 3 of 5</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: 60%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 small">
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 1. Basic</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 2. Details</span>
+                            <span class="text-primary fw-bold">3. Media</span>
+                            <span class="text-muted">4. Pricing</span>
+                            <span class="text-muted">5. Review</span>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Media Upload</h5>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">သင်ခန်းစာ Thumbnail <span class="text-danger">*</span></label>
+                            {{ form.thumbnail }}
+                            <small class="form-text text-muted d-block">{{ form.thumbnail.help_text }}</small>
+                            {% if form.thumbnail.errors %}
+                                <div class="text-danger small">{{ form.thumbnail.errors.0 }}</div>
+                            {% endif %}
+                            <div class="alert alert-info mt-2">
+                                <small>
+                                    <i class="bi bi-info-circle"></i> <strong>သတိပြုရန်:</strong><br>
+                                    • အနည်းဆုံး အရွယ်အစား: 800x450 pixels<br>
+                                    • အများဆုံး file size: 5MB<br>
+                                    • ပံ့ပိုးသော format: JPG, PNG<br>
+                                    • ပုံသည် အလိုအလျောက် optimize လုပ်ပေးမည်
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Promotional Video</label>
+                            {{ form.promo_video }}
+                            <small class="form-text text-muted d-block">{{ form.promo_video.help_text }}</small>
+                            {% if form.promo_video.errors %}
+                                <div class="text-danger small">{{ form.promo_video.errors.0 }}</div>
+                            {% endif %}
+                            <div class="alert alert-warning mt-2">
+                                <small>
+                                    <i class="bi bi-exclamation-triangle"></i> <strong>Optional:</strong><br>
+                                    • ပံ့ပိုးသော format: MP4, WEBM<br>
+                                    • အများဆုံး file size: 500MB<br>
+                                    • အကြံပြုချက်: 1-2 မိနစ် ကြာသော introduction video
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'course_create_step2' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Next: Pricing <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview image on selection
+document.querySelector('input[name="thumbnail"]').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Could add image preview here
+            console.log('Image selected:', file.name);
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}သင်ခန်းစာ ဖန်တီးမည် - Step 2{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ဖန်တီးမည်</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Indicator -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Progress</small>
+                            <small class="text-muted">Step 2 of 5</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: 40%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 small">
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 1. Basic</span>
+                            <span class="text-primary fw-bold">2. Details</span>
+                            <span class="text-muted">3. Media</span>
+                            <span class="text-muted">4. Pricing</span>
+                            <span class="text-muted">5. Review</span>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">သင်ခန်းစာ အသေးစိတ်</h5>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">အဆင့် <span class="text-danger">*</span></label>
+                            {{ form.level }}
+                            {% if form.level.errors %}
+                                <div class="text-danger small">{{ form.level.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">ဘာသာစကား <span class="text-danger">*</span></label>
+                            {{ form.language }}
+                            {% if form.language.errors %}
+                                <div class="text-danger small">{{ form.language.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">သင်တန်းကာလ (နာရီ) <span class="text-danger">*</span></label>
+                            {{ form.duration_hours }}
+                            <small class="form-text text-muted">အခန်း/သင်ခန်းစာ စုစုပေါင်း ကာလ (ခန့်မှန်းခြေ)</small>
+                            {% if form.duration_hours.errors %}
+                                <div class="text-danger small">{{ form.duration_hours.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">သင်ယူရရှိမည့် အကျိုးကျေးဇူးများ <span class="text-danger">*</span></label>
+                            {{ form.what_you_will_learn }}
+                            <small class="form-text text-muted">{{ form.what_you_will_learn.help_text }}</small>
+                            {% if form.what_you_will_learn.errors %}
+                                <div class="text-danger small">{{ form.what_you_will_learn.errors.0 }}</div>
+                            {% endif %}
+                            <div class="alert alert-info mt-2">
+                                <small>
+                                    <i class="bi bi-info-circle"></i> <strong>ဥပမာ:</strong><br>
+                                    - Python အခြေခံ ကျွမ်းကျင်မှု<br>
+                                    - Web Application တည်ဆောက်နိုင်မှု<br>
+                                    - Database Design နားလည်မှု
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">လိုအပ်ချက်များ</label>
+                            {{ form.requirements }}
+                            <small class="form-text text-muted">{{ form.requirements.help_text }}</small>
+                            {% if form.requirements.errors %}
+                                <div class="text-danger small">{{ form.requirements.errors.0 }}</div>
+                            {% endif %}
+                            <div class="alert alert-info mt-2">
+                                <small>
+                                    <i class="bi bi-info-circle"></i> <strong>ဥပမာ:</strong><br>
+                                    - ကွန်ပျူတာ အခြေခံ အသုံးချနိုင်မှု<br>
+                                    - အင်တာနက် ချိတ်ဆက်မှု
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'course_create_step1' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Next: Media <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

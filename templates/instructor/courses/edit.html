@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}ပြုပြင်မည် - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-pencil-square"></i> သင်ခန်းစာ ပြုပြင်မည်</h2>
+                    <p class="text-muted mb-0">{{ course.title }}</p>
+                </div>
+                <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Rejection Alert -->
+            {% if course.status == 'rejected' %}
+            <div class="alert alert-danger alert-permanent border-start border-danger border-4 mb-4">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill"></i> ဤသင်ခန်းစာကို Admin မှ ငြင်းပယ်ခဲ့ပါသည်
+                </h5>
+                <hr>
+                <p class="mb-2"><strong>ငြင်းပယ်သည့် အကြောင်းရင်း:</strong></p>
+                <div class="bg-light p-3 rounded mb-3">
+                    <p class="mb-0">{{ course.rejection_reason|default:"မဖော်ပြထားပါ" }}</p>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            ငြင်းပယ်သည့်ရက်: {{ course.reviewed_at|date:"d/m/Y H:i" }}
+                            {% if course.reviewed_by %}| Admin: {{ course.reviewed_by.get_full_name }}{% endif %}
+                        </small>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> အောက်ပါ form မှ ပြုပြင်ပြီး "Resubmit for Review" ကို နှိပ်ပါ
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Status Badge -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <strong>Current Status:</strong>
+                            {% if course.status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% elif course.status == 'pending' %}
+                                <span class="badge bg-warning">Pending Review</span>
+                            {% elif course.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% if course.is_published %}
+                                    <span class="badge bg-info">Published</span>
+                                {% endif %}
+                            {% elif course.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                Created: {{ course.created_at|date:"d/m/Y" }} |
+                                Updated: {{ course.updated_at|date:"d/m/Y" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">သင်ခန်းစာအမည် <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Slug</label>
+                            {{ form.slug }}
+                            <small class="form-text text-muted d-block">URL-friendly version (auto-generated, read-only)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Short Description <span class="text-danger">*</span></label>
+                            {{ form.short_description }}
+                            {% if form.short_description.errors %}
+                                <div class="text-danger small">{{ form.short_description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Description <span class="text-danger">*</span></label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Details -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-book"></i> Course Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Level <span class="text-danger">*</span></label>
+                                {{ form.level }}
+                                {% if form.level.errors %}
+                                    <div class="text-danger small">{{ form.level.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Language <span class="text-danger">*</span></label>
+                                {{ form.language }}
+                                {% if form.language.errors %}
+                                    <div class="text-danger small">{{ form.language.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Duration (hours) <span class="text-danger">*</span></label>
+                                {{ form.duration_hours }}
+                                {% if form.duration_hours.errors %}
+                                    <div class="text-danger small">{{ form.duration_hours.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">What You Will Learn <span class="text-danger">*</span></label>
+                            {{ form.what_you_will_learn_text }}
+                            <small class="form-text text-muted d-block">{{ form.what_you_will_learn_text.help_text }}</small>
+                            {% if form.what_you_will_learn_text.errors %}
+                                <div class="text-danger small">{{ form.what_you_will_learn_text.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Requirements</label>
+                            {{ form.requirements_text }}
+                            <small class="form-text text-muted d-block">{{ form.requirements_text.help_text }}</small>
+                            {% if form.requirements_text.errors %}
+                                <div class="text-danger small">{{ form.requirements_text.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-image"></i> Media</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Thumbnail <span class="text-danger">*</span></label>
+                                {% if course.thumbnail %}
+                                    <div class="mb-2">
+                                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}"
+                                             class="img-thumbnail" style="max-width: 300px;">
+                                        <p class="small text-muted mb-0 mt-1">Current thumbnail</p>
+                                    </div>
+                                {% endif %}
+                                {{ form.thumbnail }}
+                                <small class="form-text text-muted d-block">Upload new image to replace (min 800x450px, max 5MB)</small>
+                                {% if form.thumbnail.errors %}
+                                    <div class="text-danger small">{{ form.thumbnail.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Promotional Video</label>
+                                {% if course.promo_video %}
+                                    <div class="mb-2">
+                                        <video controls style="max-width: 300px;" class="border rounded">
+                                            <source src="{{ course.promo_video.url }}" type="video/mp4">
+                                        </video>
+                                        <p class="small text-muted mb-0 mt-1">Current promo video</p>
+                                    </div>
+                                {% endif %}
+                                {{ form.promo_video }}
+                                <small class="form-text text-muted d-block">Upload new video to replace (max 500MB, MP4/WEBM)</small>
+                                {% if form.promo_video.errors %}
+                                    <div class="text-danger small">{{ form.promo_video.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-currency-dollar"></i> Pricing</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">သင်တန်းကြေး (ကျပ်) <span class="text-danger">*</span></label>
+                                {{ form.price }}
+                                {% if form.price.errors %}
+                                    <div class="text-danger small">{{ form.price.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Access Type <span class="text-danger">*</span></label>
+                                {{ form.access_type }}
+                                {% if form.access_type.errors %}
+                                    <div class="text-danger small">{{ form.access_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <div>
+                        {% if course.status == 'rejected' %}
+                            <button type="submit" name="resubmit_for_review" value="true" class="btn btn-success">
+                                <i class="bi bi-send"></i> Resubmit for Review
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
