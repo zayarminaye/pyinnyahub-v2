@@ -75,6 +75,67 @@ class CourseAdmin(admin.ModelAdmin):
         }),
     )
 
+    def get_queryset(self, request):
+        """Restrict instructors to only see their own courses."""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser or request.user.role == 'admin':
+            return qs
+        # Instructors can only see their own courses
+        if request.user.role == 'instructor':
+            return qs.filter(instructor=request.user)
+        return qs.none()
+
+    def has_add_permission(self, request):
+        """Instructors can add courses."""
+        return request.user.is_superuser or request.user.role in ['admin', 'instructor']
+
+    def has_change_permission(self, request, obj=None):
+        """Instructors can only edit their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:  # List view permission check
+                return True
+            return obj.instructor == request.user  # Can only edit own courses
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Instructors can only delete their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:  # List view permission check
+                return True
+            return obj.instructor == request.user  # Can only delete own courses
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        """Instructors can only view their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:  # List view permission check
+                return True
+            return obj.instructor == request.user  # Can only view own courses
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        """Make certain fields read-only for instructors."""
+        readonly = list(self.readonly_fields)
+        # Instructors cannot change who the instructor is or featured status
+        if request.user.role == 'instructor':
+            readonly.extend(['instructor', 'is_featured', 'status', 'reviewed_by', 'reviewed_at', 'rejection_reason'])
+        return readonly
+
+    def get_fieldsets(self, request, obj=None):
+        """Customize fieldsets for instructors vs admins."""
+        fieldsets = super().get_fieldsets(request, obj)
+        # Instructors don't see the Review & Status section fields (except read-only)
+        if request.user.role == 'instructor':
+            # Return all fieldsets but instructors will see restricted fields as readonly
+            return fieldsets
+        return fieldsets
+
     def instructor_info(self, obj):
         """Display instructor name with link."""
         user_url = reverse('admin:users_user_change', args=[obj.instructor.id])
@@ -200,6 +261,10 @@ class CourseAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Handle manual status changes from detail page with audit logging."""
+        # Auto-set instructor for new courses created by instructors
+        if not change and request.user.role == 'instructor':
+            obj.instructor = request.user
+
         if change:  # Editing existing object
             old_obj = Course.objects.get(pk=obj.pk)
 
@@ -252,6 +317,49 @@ class SectionAdmin(admin.ModelAdmin):
     search_fields = ('title', 'course__title')
     inlines = [LessonInline]
 
+    def get_queryset(self, request):
+        """Restrict instructors to only see sections of their own courses."""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser or request.user.role == 'admin':
+            return qs
+        if request.user.role == 'instructor':
+            return qs.filter(course__instructor=request.user)
+        return qs.none()
+
+    def has_add_permission(self, request):
+        """Instructors can add sections to their own courses."""
+        return request.user.is_superuser or request.user.role in ['admin', 'instructor']
+
+    def has_change_permission(self, request, obj=None):
+        """Instructors can only edit sections of their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:
+                return True
+            return obj.course.instructor == request.user
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Instructors can only delete sections of their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:
+                return True
+            return obj.course.instructor == request.user
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        """Instructors can only view sections of their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:
+                return True
+            return obj.course.instructor == request.user
+        return False
+
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
@@ -279,4 +387,47 @@ class LessonAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def get_queryset(self, request):
+        """Restrict instructors to only see lessons of their own courses."""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser or request.user.role == 'admin':
+            return qs
+        if request.user.role == 'instructor':
+            return qs.filter(section__course__instructor=request.user)
+        return qs.none()
+
+    def has_add_permission(self, request):
+        """Instructors can add lessons to their own courses."""
+        return request.user.is_superuser or request.user.role in ['admin', 'instructor']
+
+    def has_change_permission(self, request, obj=None):
+        """Instructors can only edit lessons of their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:
+                return True
+            return obj.section.course.instructor == request.user
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Instructors can only delete lessons of their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:
+                return True
+            return obj.section.course.instructor == request.user
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        """Instructors can only view lessons of their own courses."""
+        if request.user.is_superuser or request.user.role == 'admin':
+            return True
+        if request.user.role == 'instructor':
+            if obj is None:
+                return True
+            return obj.section.course.instructor == request.user
+        return False
 
