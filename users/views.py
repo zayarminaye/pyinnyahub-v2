@@ -645,22 +645,38 @@ def apply_instructor_view(request):
                     motivation=motivation if motivation else '',
                 )
 
-            # Save optional file uploads
+            # Save optional file uploads using storage service
             if resume:
-                try:
-                    application.resume = resume
+                from core.storage_service import handle_file_upload, upload_instructor_resume
+
+                success, result, url = handle_file_upload(
+                    upload_instructor_resume,
+                    resume,
+                    instructor_id=request.user.id
+                )
+
+                if success:
+                    application.resume = result  # result is file_path
                     application.save()
-                except Exception as e:
-                    messages.error(request, f"Resume ဖိုင် တင်ရာတွင် အမှား: {str(e)}")
+                else:
+                    messages.error(request, result)  # result is error message
                     context = {'form_data': form_data, **rejection_context}
                     return render(request, 'users/apply_instructor.html', context)
 
             if certificates:
-                try:
-                    application.certificates = certificates
+                from core.storage_service import handle_file_upload, upload_instructor_certificates
+
+                success, result, url = handle_file_upload(
+                    upload_instructor_certificates,
+                    certificates,
+                    instructor_id=request.user.id
+                )
+
+                if success:
+                    application.certificates = result  # result is file_path
                     application.save()
-                except Exception as e:
-                    messages.error(request, f"လက်မှတ် ဖိုင် တင်ရာတွင် အမှား: {str(e)}")
+                else:
+                    messages.error(request, result)  # result is error message
                     context = {'form_data': form_data, **rejection_context}
                     return render(request, 'users/apply_instructor.html', context)
 

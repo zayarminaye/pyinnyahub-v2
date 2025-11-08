@@ -218,17 +218,46 @@ def course_create_step3(request):
     if request.method == 'POST':
         form = CourseMediaForm(request.POST, request.FILES)
         if form.is_valid():
-            # Store files temporarily (will be attached to course object in step5)
-            request.session['course_wizard'].update({
-                'has_thumbnail': True if form.cleaned_data.get('thumbnail') else False,
-                'has_promo_video': True if form.cleaned_data.get('promo_video') else False,
-            })
-            # Store files in session as temporary storage isn't ideal
-            # We'll handle file uploads in the final step
-            request.session['course_wizard_files'] = {
-                'thumbnail': request.FILES.get('thumbnail'),
-                'promo_video': request.FILES.get('promo_video'),
-            }
+            from core.storage_service import handle_file_upload, upload_course_thumbnail, upload_course_promo_video
+
+            wizard_file_data = {}
+
+            # Upload thumbnail using storage service
+            if form.cleaned_data.get('thumbnail'):
+                thumbnail = form.cleaned_data['thumbnail']
+
+                success, result, url = handle_file_upload(
+                    upload_course_thumbnail,
+                    thumbnail
+                )
+
+                if success:
+                    wizard_file_data['thumbnail_path'] = result
+                    wizard_file_data['thumbnail_url'] = url
+                    wizard_file_data['has_thumbnail'] = True
+                else:
+                    messages.error(request, result)
+                    return render(request, 'instructor/courses/create/step3.html', {'form': form})
+
+            # Upload promo video using storage service
+            if form.cleaned_data.get('promo_video'):
+                promo_video = form.cleaned_data['promo_video']
+
+                success, result, url = handle_file_upload(
+                    upload_course_promo_video,
+                    promo_video
+                )
+
+                if success:
+                    wizard_file_data['promo_video_path'] = result
+                    wizard_file_data['promo_video_url'] = url
+                    wizard_file_data['has_promo_video'] = True
+                else:
+                    messages.error(request, result)
+                    return render(request, 'instructor/courses/create/step3.html', {'form': form})
+
+            # Store file data in session
+            request.session['course_wizard'].update(wizard_file_data)
             request.session.modified = True
             messages.success(request, 'Step 3 ပြီးဆုံးပါပြီ။ Step 4 သို့ ဆက်လက်လုပ်ဆောင်ပါ။')
             return redirect('course_create_step4')
@@ -306,20 +335,18 @@ def course_create_step5(request):
                 status=status,
             )
 
-            # Handle file uploads if they exist
-            if 'course_wizard_files' in request.session:
-                files = request.session['course_wizard_files']
-                if files.get('thumbnail'):
-                    course.thumbnail = files['thumbnail']
-                if files.get('promo_video'):
-                    course.promo_video = files['promo_video']
+            # Files were already uploaded in step3 via storage service
+            # Just assign the file paths to the course
+            if wizard_data.get('thumbnail_path'):
+                course.thumbnail = wizard_data['thumbnail_path']
+
+            if wizard_data.get('promo_video_path'):
+                course.promo_video = wizard_data['promo_video_path']
 
             course.save()
 
             # Clear wizard session
             del request.session['course_wizard']
-            if 'course_wizard_files' in request.session:
-                del request.session['course_wizard_files']
             request.session.modified = True
 
             if status == 'draft':
