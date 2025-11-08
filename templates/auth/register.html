@@ -8,6 +8,30 @@
         <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-body p-5">
+                    {% if success %}
+                    <!-- Success Message -->
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="text-success mb-3">စာရင်းသွင်းမှု အောင်မြင်ပါသည်!</h2>
+                        <p class="lead mb-2">ကြိုဆိုပါတယ် {{ user_name }}!</p>
+                        <p class="text-muted mb-4">
+                            သင့်အီးမေးလ် <strong>{{ user_email }}</strong> သို့ အတည်ပြုချက် အီးမေးလ် ပို့ပြီးပါပြီ။
+                        </p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            အကောင့်ဖွင့်မှု အောင်မြင်ပါပြီ။ ယခု အကောင့်ဝင်ရောက်နိုင်ပါပြီ။
+                        </div>
+                        <a href="{% url 'login' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="bi bi-box-arrow-in-right"></i> အကောင့်ဝင်မည်
+                        </a>
+                        <p class="text-muted small">
+                            သို့မဟုတ် <span id="countdown">5</span> စက္ကန့်အတွင်း အလိုအလျောက် ဝင်ရောက်မည်...
+                        </p>
+                    </div>
+                    {% else %}
+                    <!-- Registration Form -->
                     <h2 class="text-center mb-4">စာရင်းသွင်းမည်</h2>
                     <form method="post" id="registerForm">
                         {% csrf_token %}
@@ -51,6 +75,7 @@
                     <p class="text-center text-muted">
                         အကောင့်ရှိပြီးသားလား? <a href="{% url 'login' %}">အကောင့်ဝင်မည်</a>
                     </p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -60,6 +85,21 @@
 
 {% block extra_js %}
 <script>
+    {% if success %}
+    // Auto-redirect countdown after successful registration
+    let countdown = 5;
+    const countdownElement = document.getElementById('countdown');
+
+    const countdownInterval = setInterval(function() {
+        countdown--;
+        countdownElement.textContent = countdown;
+
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            window.location.href = "{% url 'login' %}";
+        }
+    }, 1000);
+    {% else %}
     // Client-side password matching validation
     const password = document.getElementById('password');
     const password2 = document.getElementById('password2');
@@ -99,5 +139,6 @@
             password2.focus();
         }
     });
+    {% endif %}
 </script>
 {% endblock %}

@@ -207,12 +207,24 @@ def register_view(request):
                 last_name=last_name
             )
 
-            # Send welcome email
-            from notifications.services import NotificationService
-            NotificationService.send_registration_confirmation(user)
+            # Send welcome email (non-blocking - don't fail registration if email fails)
+            try:
+                from notifications.services import NotificationService
+                NotificationService.send_registration_confirmation(user)
+            except Exception as e:
+                # Log the error but don't fail registration
+                import logging
+                logger = logging.getLogger('pyinnyahub')
+                logger.error(f"Failed to send registration email to {email}: {str(e)}")
 
-            messages.success(request, "စာရင်းသွင်းမှု အောင်မြင်ပါသည်။ ကျေးဇူးပြု၍ အကောင့်ဝင်ပါ။")
-            return redirect('login')
+            # Show success message and provide login link
+            context = {
+                'success': True,
+                'user_email': email,
+                'user_name': first_name
+            }
+            return render(request, 'auth/register.html', context)
+
         except Exception as e:
             messages.error(request, f"စာရင်းသွင်းရာတွင် အမှားရှိပါသည်: {str(e)}")
             return render(request, 'auth/register.html', {'form_data': form_data})
