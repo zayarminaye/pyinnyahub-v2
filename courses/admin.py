@@ -58,7 +58,7 @@ class CourseAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'instructor', 'category', 'short_description', 'description')
         }),
         ('📖 Course Details', {
-            'fields': ('level', 'language', 'duration_hours', 'what_you_will_learn', 'requirements', 'target_audience')
+            'fields': ('level', 'language', 'duration_hours', 'what_you_will_learn', 'requirements')
         }),
         ('🎬 Media', {
             'fields': ('thumbnail', 'promo_video')
