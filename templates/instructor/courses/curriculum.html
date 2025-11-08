@@ -1,0 +1,472 @@
+{% extends 'base.html' %}
+
+{% block title %}Curriculum - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-list-ul"></i> Curriculum Manager</h2>
+                    <p class="text-muted mb-0">{{ course.title }}</p>
+                </div>
+                <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> <strong>Drag and drop</strong> sections and lessons to reorder them. Changes are saved automatically.
+            </div>
+
+            <!-- Add Section Button -->
+            <div class="mb-4">
+                <button class="btn btn-primary" onclick="showAddSectionModal()">
+                    <i class="bi bi-plus-circle"></i> Add New Section
+                </button>
+            </div>
+
+            <!-- Sections List -->
+            <div id="sections-container" class="sortable-sections">
+                {% for section in sections %}
+                <div class="card mb-3 section-item" data-section-id="{{ section.id }}">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center flex-grow-1 section-handle" style="cursor: move;">
+                                <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                                <h5 class="mb-0">{{ section.title }}</h5>
+                                <span class="badge bg-secondary ms-2">{{ section.lessons.count }} lesson{{ section.lessons.count|pluralize }}</span>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="showAddLessonModal({{ section.id }})" title="Add Lesson">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="editSection({{ section.id }}, '{{ section.title|escapejs }}', '{{ section.description|escapejs }}')" title="Edit Section">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteSection({{ section.id }}, '{{ section.title|escapejs }}')" title="Delete Section">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% if section.description %}
+                        <p class="text-muted small mb-0 mt-2">{{ section.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="lessons-container sortable-lessons-{{ section.id }}" data-section-id="{{ section.id }}">
+                            {% if section.lessons.all %}
+                                {% for lesson in section.lessons.all %}
+                                <div class="lesson-item p-3 border-bottom" data-lesson-id="{{ lesson.id }}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center flex-grow-1 lesson-handle" style="cursor: move;">
+                                            <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                                            <i class="bi bi-{% if lesson.content_type == 'video' %}play-circle{% elif lesson.content_type == 'text' %}file-text{% elif lesson.content_type == 'quiz' %}question-circle{% else %}file-earmark{% endif %} me-2 text-primary"></i>
+                                            <span>{{ lesson.title }}</span>
+                                            <span class="badge bg-info ms-2">{{ lesson.get_content_type_display }}</span>
+                                            {% if lesson.duration_minutes %}
+                                                <small class="text-muted ms-2">{{ lesson.duration_minutes }} min</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="editLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Edit Lesson">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" onclick="deleteLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Delete Lesson">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="p-3 text-center text-muted empty-lessons">
+                                    <i class="bi bi-inbox"></i> No lessons yet. Click "+" to add a lesson.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-list-ul"></i>
+                    </div>
+                    <div class="empty-state-title">No sections yet</div>
+                    <div class="empty-state-message">Create your first section to start building your course curriculum.</div>
+                    <button class="btn btn-primary empty-state-action" onclick="showAddSectionModal()">
+                        <i class="bi bi-plus-circle"></i> Add First Section
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Section Modal -->
+<div class="modal fade" id="sectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sectionModalTitle">Add New Section</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="sectionForm">
+                    <input type="hidden" id="sectionId" value="">
+                    <div class="mb-3">
+                        <label class="form-label">Section Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="sectionTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="sectionDescription" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSection()">Save Section</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Lesson Modal -->
+<div class="modal fade" id="lessonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lessonModalTitle">Add New Lesson</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="lessonForm">
+                    <input type="hidden" id="lessonId" value="">
+                    <input type="hidden" id="lessonSectionId" value="">
+                    <div class="mb-3">
+                        <label class="form-label">Lesson Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="lessonTitle" required>
+                    </div>
+                    <div class="mb-3" id="contentTypeGroup">
+                        <label class="form-label">Content Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="lessonContentType">
+                            <option value="video">Video</option>
+                            <option value="text">Text</option>
+                            <option value="quiz">Quiz</option>
+                            <option value="assignment">Assignment</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveLesson()">Save Lesson</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include SortableJS from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+const courseId = {{ course.id }};
+const csrfToken = '{{ csrf_token }}';
+
+// Initialize Sortable for sections
+const sectionsContainer = document.getElementById('sections-container');
+if (sectionsContainer && sectionsContainer.children.length > 0) {
+    new Sortable(sectionsContainer, {
+        handle: '.section-handle',
+        animation: 150,
+        onEnd: function(evt) {
+            // Get all section IDs in new order
+            const sectionIds = Array.from(sectionsContainer.children)
+                .map(el => el.dataset.sectionId)
+                .filter(id => id);  // Remove undefined/null values
+
+            // Send AJAX request to update order
+            fetch(`/courses/instructor/${courseId}/sections/reorder/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ section_ids: sectionIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Section order updated successfully', 'success');
+                } else {
+                    showToast('Failed to update section order', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error updating section order', 'error');
+            });
+        }
+    });
+}
+
+// Initialize Sortable for each lessons container
+document.querySelectorAll('[class^="sortable-lessons-"]').forEach(container => {
+    if (container.children.length > 0 && !container.querySelector('.empty-lessons')) {
+        const sectionId = container.dataset.sectionId;
+        new Sortable(container, {
+            handle: '.lesson-handle',
+            animation: 150,
+            onEnd: function(evt) {
+                // Get all lesson IDs in new order
+                const lessonIds = Array.from(container.children)
+                    .map(el => el.dataset.lessonId)
+                    .filter(id => id);
+
+                // Send AJAX request to update order
+                fetch(`/courses/instructor/${courseId}/sections/${sectionId}/lessons/reorder/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ lesson_ids: lessonIds })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Lesson order updated successfully', 'success');
+                    } else {
+                        showToast('Failed to update lesson order', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error updating lesson order', 'error');
+                });
+            }
+        });
+    }
+});
+
+// Section Management Functions
+function showAddSectionModal() {
+    document.getElementById('sectionModalTitle').textContent = 'Add New Section';
+    document.getElementById('sectionId').value = '';
+    document.getElementById('sectionTitle').value = '';
+    document.getElementById('sectionDescription').value = '';
+    new bootstrap.Modal(document.getElementById('sectionModal')).show();
+}
+
+function editSection(id, title, description) {
+    document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+    document.getElementById('sectionId').value = id;
+    document.getElementById('sectionTitle').value = title;
+    document.getElementById('sectionDescription').value = description || '';
+    new bootstrap.Modal(document.getElementById('sectionModal')).show();
+}
+
+function saveSection() {
+    const id = document.getElementById('sectionId').value;
+    const title = document.getElementById('sectionTitle').value.trim();
+    const description = document.getElementById('sectionDescription').value.trim();
+
+    if (!title) {
+        showToast('Section title is required', 'error');
+        return;
+    }
+
+    const url = id
+        ? `/courses/instructor/${courseId}/sections/${id}/update/`
+        : `/courses/instructor/${courseId}/sections/create/`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ title, description })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('sectionModal')).hide();
+            showToast(`Section ${id ? 'updated' : 'created'} successfully`, 'success');
+            location.reload();  // Reload to show new section
+        } else {
+            showToast(data.error || 'Failed to save section', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error saving section', 'error');
+    });
+}
+
+function deleteSection(id, title) {
+    if (!confirm(`Are you sure you want to delete section "${title}"?\n\nThis will also delete all lessons in this section. This action cannot be undone.`)) {
+        return;
+    }
+
+    fetch(`/courses/instructor/${courseId}/sections/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Section deleted successfully', 'success');
+            location.reload();
+        } else {
+            showToast(data.error || 'Failed to delete section', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error deleting section', 'error');
+    });
+}
+
+// Lesson Management Functions
+function showAddLessonModal(sectionId) {
+    document.getElementById('lessonModalTitle').textContent = 'Add New Lesson';
+    document.getElementById('lessonId').value = '';
+    document.getElementById('lessonSectionId').value = sectionId;
+    document.getElementById('lessonTitle').value = '';
+    document.getElementById('lessonContentType').value = 'video';
+    document.getElementById('contentTypeGroup').style.display = 'block';
+    new bootstrap.Modal(document.getElementById('lessonModal')).show();
+}
+
+function editLesson(id, title) {
+    document.getElementById('lessonModalTitle').textContent = 'Edit Lesson';
+    document.getElementById('lessonId').value = id;
+    document.getElementById('lessonTitle').value = title;
+    document.getElementById('contentTypeGroup').style.display = 'none';  // Don't allow changing content type
+    new bootstrap.Modal(document.getElementById('lessonModal')).show();
+}
+
+function saveLesson() {
+    const id = document.getElementById('lessonId').value;
+    const sectionId = document.getElementById('lessonSectionId').value;
+    const title = document.getElementById('lessonTitle').value.trim();
+    const contentType = document.getElementById('lessonContentType').value;
+
+    if (!title) {
+        showToast('Lesson title is required', 'error');
+        return;
+    }
+
+    const url = id
+        ? `/courses/instructor/${courseId}/lessons/${id}/update/`
+        : `/courses/instructor/${courseId}/sections/${sectionId}/lessons/create/`;
+
+    const payload = id ? { title } : { title, content_type: contentType };
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('lessonModal')).hide();
+            showToast(`Lesson ${id ? 'updated' : 'created'} successfully`, 'success');
+            location.reload();
+        } else {
+            showToast(data.error || 'Failed to save lesson', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error saving lesson', 'error');
+    });
+}
+
+function deleteLesson(id, title) {
+    if (!confirm(`Are you sure you want to delete lesson "${title}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    fetch(`/courses/instructor/${courseId}/lessons/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Lesson deleted successfully', 'success');
+            location.reload();
+        } else {
+            showToast(data.error || 'Failed to delete lesson', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error deleting lesson', 'error');
+    });
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    // You can implement a better toast notification system
+    // For now, using simple alert
+    const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+</script>
+
+<style>
+.section-item {
+    transition: all 0.3s ease;
+}
+
+.section-item.sortable-ghost {
+    opacity: 0.4;
+}
+
+.lesson-item {
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.lesson-item:hover {
+    background-color: #f8f9fa;
+}
+
+.lesson-item.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-drag {
+    opacity: 0.8;
+}
+</style>
+{% endblock %}

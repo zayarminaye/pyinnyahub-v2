@@ -23,4 +23,14 @@ urlpatterns = [
     path('instructor/<int:course_id>/edit/', views.course_edit_view, name='course_edit'),
     path('instructor/<int:course_id>/delete/', views.course_delete_view, name='course_delete'),
     path('instructor/<int:course_id>/curriculum/', views.course_curriculum_view, name='course_curriculum'),
+
+    # Curriculum Management AJAX
+    path('instructor/<int:course_id>/sections/create/', views.section_create_ajax, name='section_create_ajax'),
+    path('instructor/<int:course_id>/sections/<int:section_id>/update/', views.section_update_ajax, name='section_update_ajax'),
+    path('instructor/<int:course_id>/sections/<int:section_id>/delete/', views.section_delete_ajax, name='section_delete_ajax'),
+    path('instructor/<int:course_id>/sections/reorder/', views.section_reorder_ajax, name='section_reorder_ajax'),
+    path('instructor/<int:course_id>/sections/<int:section_id>/lessons/create/', views.lesson_create_ajax, name='lesson_create_ajax'),
+    path('instructor/<int:course_id>/lessons/<int:lesson_id>/update/', views.lesson_update_ajax, name='lesson_update_ajax'),
+    path('instructor/<int:course_id>/lessons/<int:lesson_id>/delete/', views.lesson_delete_ajax, name='lesson_delete_ajax'),
+    path('instructor/<int:course_id>/sections/<int:section_id>/lessons/reorder/', views.lesson_reorder_ajax, name='lesson_reorder_ajax'),
 ]
