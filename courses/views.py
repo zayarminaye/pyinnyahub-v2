@@ -218,39 +218,46 @@ def course_create_step3(request):
     if request.method == 'POST':
         form = CourseMediaForm(request.POST, request.FILES)
         if form.is_valid():
-            import os
-            from django.core.files.storage import default_storage
-            from django.core.files.base import ContentFile
+            from core.storage_service import handle_file_upload, upload_course_thumbnail, upload_course_promo_video
 
-            # Save files to temporary storage
-            wizard_id = request.session.get('wizard_id')
-            if not wizard_id:
-                import uuid
-                wizard_id = str(uuid.uuid4())
-                request.session['wizard_id'] = wizard_id
+            wizard_file_data = {}
 
-            thumbnail_path = None
-            promo_video_path = None
-
-            # Save thumbnail to temp storage
+            # Upload thumbnail using storage service
             if form.cleaned_data.get('thumbnail'):
                 thumbnail = form.cleaned_data['thumbnail']
-                thumbnail_path = f'temp/wizard/{wizard_id}/thumbnail_{thumbnail.name}'
-                default_storage.save(thumbnail_path, ContentFile(thumbnail.read()))
 
-            # Save promo video to temp storage
+                success, result, url = handle_file_upload(
+                    upload_course_thumbnail,
+                    thumbnail
+                )
+
+                if success:
+                    wizard_file_data['thumbnail_path'] = result
+                    wizard_file_data['thumbnail_url'] = url
+                    wizard_file_data['has_thumbnail'] = True
+                else:
+                    messages.error(request, result)
+                    return render(request, 'instructor/courses/create/step3.html', {'form': form})
+
+            # Upload promo video using storage service
             if form.cleaned_data.get('promo_video'):
                 promo_video = form.cleaned_data['promo_video']
-                promo_video_path = f'temp/wizard/{wizard_id}/promo_video_{promo_video.name}'
-                default_storage.save(promo_video_path, ContentFile(promo_video.read()))
 
-            # Store file paths in session
-            request.session['course_wizard'].update({
-                'has_thumbnail': True if thumbnail_path else False,
-                'has_promo_video': True if promo_video_path else False,
-                'thumbnail_path': thumbnail_path,
-                'promo_video_path': promo_video_path,
-            })
+                success, result, url = handle_file_upload(
+                    upload_course_promo_video,
+                    promo_video
+                )
+
+                if success:
+                    wizard_file_data['promo_video_path'] = result
+                    wizard_file_data['promo_video_url'] = url
+                    wizard_file_data['has_promo_video'] = True
+                else:
+                    messages.error(request, result)
+                    return render(request, 'instructor/courses/create/step3.html', {'form': form})
+
+            # Store file data in session
+            request.session['course_wizard'].update(wizard_file_data)
             request.session.modified = True
             messages.success(request, 'Step 3 ပြီးဆုံးပါပြီ။ Step 4 သို့ ဆက်လက်လုပ်ဆောင်ပါ။')
             return redirect('course_create_step4')
@@ -311,10 +318,6 @@ def course_create_step5(request):
 
         # Create course object
         try:
-            from django.core.files.storage import default_storage
-            from django.core.files import File
-            import os
-
             course = Course(
                 title=wizard_data['title'],
                 slug=wizard_data['slug'],
@@ -332,35 +335,18 @@ def course_create_step5(request):
                 status=status,
             )
 
-            # Handle file uploads from temporary storage
+            # Files were already uploaded in step3 via storage service
+            # Just assign the file paths to the course
             if wizard_data.get('thumbnail_path'):
-                thumbnail_path = wizard_data['thumbnail_path']
-                if default_storage.exists(thumbnail_path):
-                    with default_storage.open(thumbnail_path, 'rb') as f:
-                        course.thumbnail.save(os.path.basename(thumbnail_path), File(f), save=False)
+                course.thumbnail = wizard_data['thumbnail_path']
 
             if wizard_data.get('promo_video_path'):
-                promo_video_path = wizard_data['promo_video_path']
-                if default_storage.exists(promo_video_path):
-                    with default_storage.open(promo_video_path, 'rb') as f:
-                        course.promo_video.save(os.path.basename(promo_video_path), File(f), save=False)
+                course.promo_video = wizard_data['promo_video_path']
 
             course.save()
 
-            # Clean up temporary files
-            wizard_id = request.session.get('wizard_id')
-            if wizard_id:
-                temp_dir = f'temp/wizard/{wizard_id}/'
-                if default_storage.exists(temp_dir):
-                    # Delete all files in the temp directory
-                    directories, files = default_storage.listdir(temp_dir)
-                    for filename in files:
-                        default_storage.delete(os.path.join(temp_dir, filename))
-
             # Clear wizard session
             del request.session['course_wizard']
-            if 'wizard_id' in request.session:
-                del request.session['wizard_id']
             request.session.modified = True
 
             if status == 'draft':
