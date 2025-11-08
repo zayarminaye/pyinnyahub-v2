@@ -354,9 +354,35 @@ def course_create_step5(request):
 @owns_course
 def course_edit_view(request, course_id):
     """Edit existing course."""
-    # Placeholder - will implement next
-    messages.info(request, 'Course edit feature coming soon!')
-    return redirect('instructor_courses')
+    course = get_object_or_404(Course, id=course_id)
+
+    if request.method == 'POST':
+        form = CourseEditForm(request.POST, request.FILES, instance=course)
+        if form.is_valid():
+            # Check if resubmitting rejected course
+            resubmit = request.POST.get('resubmit_for_review') == 'true'
+
+            # Save the course
+            course = form.save(commit=False)
+
+            # If resubmitting a rejected course, change status to pending
+            if resubmit and course.status == 'rejected':
+                course.status = 'pending'
+                course.rejection_reason = None
+                messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို ပြုပြင်ပြီး Admin သုံးသပ်ရန် ပြန်လည်တင်သွင်းပြီးပါပြီ။')
+            else:
+                messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို အောင်မြင်စွာ ပြုပြင်ပြီးပါပြီ။')
+
+            course.save()
+            return redirect('instructor_courses')
+    else:
+        form = CourseEditForm(instance=course)
+
+    context = {
+        'form': form,
+        'course': course,
+    }
+    return render(request, 'instructor/courses/edit.html', context)
 
 
 @login_required
@@ -364,8 +390,27 @@ def course_edit_view(request, course_id):
 @owns_course
 def course_delete_view(request, course_id):
     """Delete course."""
-    # Placeholder - will implement next
-    messages.info(request, 'Course delete feature coming soon!')
+    course = get_object_or_404(Course, id=course_id)
+
+    # Only allow deletion of draft or rejected courses
+    if course.status not in ['draft', 'rejected']:
+        messages.error(request, 'Approved သို့မဟုတ် Pending Review သင်ခန်းစာများကို ဖျက်၍ မရပါ။')
+        return redirect('instructor_courses')
+
+    # Check if course has active subscriptions
+    from subscriptions.models import Subscription
+    active_subs = Subscription.objects.filter(course=course, is_active=True).count()
+    if active_subs > 0:
+        messages.error(request, 'ဤသင်ခန်းစာတွင် active subscriptions ရှိနေသောကြောင့် ဖျက်၍ မရပါ။')
+        return redirect('instructor_courses')
+
+    if request.method == 'POST':
+        course_title = course.title
+        course.delete()
+        messages.success(request, f'သင်ခန်းစာ "{course_title}" ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။')
+        return redirect('instructor_courses')
+
+    # If not POST, redirect back
     return redirect('instructor_courses')
 
 
@@ -374,6 +419,218 @@ def course_delete_view(request, course_id):
 @owns_course
 def course_curriculum_view(request, course_id):
     """Manage course curriculum."""
-    # Placeholder - will implement next
-    messages.info(request, 'Curriculum manager coming soon!')
-    return redirect('instructor_courses')
+    course = get_object_or_404(Course, id=course_id)
+    sections = course.sections.all().prefetch_related('lessons')
+
+    context = {
+        'course': course,
+        'sections': sections,
+    }
+    return render(request, 'instructor/courses/curriculum.html', context)
+
+
+# ============================================================================
+# CURRICULUM MANAGEMENT AJAX ENDPOINTS
+# ============================================================================
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+
+
+@login_required
+@instructor_required
+@require_POST
+def section_create_ajax(request, course_id):
+    """Create a new section via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+
+    try:
+        data = json.loads(request.body)
+        title = data.get('title', '').strip()
+        description = data.get('description', '').strip()
+
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Title is required'}, status=400)
+
+        # Get the next order number
+        max_order = course.sections.aggregate(models.Max('order'))['order__max'] or -1
+
+        section = Section.objects.create(
+            course=course,
+            title=title,
+            description=description,
+            order=max_order + 1
+        )
+
+        return JsonResponse({
+            'success': True,
+            'section': {
+                'id': section.id,
+                'title': section.title,
+                'description': section.description,
+                'order': section.order,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def section_update_ajax(request, course_id, section_id):
+    """Update section via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    section = get_object_or_404(Section, id=section_id, course=course)
+
+    try:
+        data = json.loads(request.body)
+        section.title = data.get('title', section.title).strip()
+        section.description = data.get('description', section.description).strip()
+        section.save()
+
+        return JsonResponse({
+            'success': True,
+            'section': {
+                'id': section.id,
+                'title': section.title,
+                'description': section.description,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def section_delete_ajax(request, course_id, section_id):
+    """Delete section via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    section = get_object_or_404(Section, id=section_id, course=course)
+
+    try:
+        section.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def section_reorder_ajax(request, course_id):
+    """Reorder sections via drag-and-drop."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+
+    try:
+        data = json.loads(request.body)
+        section_ids = data.get('section_ids', [])
+
+        # Update order for each section
+        for index, section_id in enumerate(section_ids):
+            Section.objects.filter(id=section_id, course=course).update(order=index)
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def lesson_create_ajax(request, course_id, section_id):
+    """Create a new lesson via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    section = get_object_or_404(Section, id=section_id, course=course)
+
+    try:
+        data = json.loads(request.body)
+        title = data.get('title', '').strip()
+        content_type = data.get('content_type', 'video')
+
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Title is required'}, status=400)
+
+        # Get the next order number
+        max_order = section.lessons.aggregate(models.Max('order'))['order__max'] or -1
+
+        lesson = Lesson.objects.create(
+            section=section,
+            title=title,
+            content_type=content_type,
+            order=max_order + 1
+        )
+
+        return JsonResponse({
+            'success': True,
+            'lesson': {
+                'id': lesson.id,
+                'title': lesson.title,
+                'content_type': lesson.content_type,
+                'order': lesson.order,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def lesson_update_ajax(request, course_id, lesson_id):
+    """Update lesson via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    lesson = get_object_or_404(Lesson, id=lesson_id, section__course=course)
+
+    try:
+        data = json.loads(request.body)
+        lesson.title = data.get('title', lesson.title).strip()
+        lesson.save()
+
+        return JsonResponse({
+            'success': True,
+            'lesson': {
+                'id': lesson.id,
+                'title': lesson.title,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def lesson_delete_ajax(request, course_id, lesson_id):
+    """Delete lesson via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    lesson = get_object_or_404(Lesson, id=lesson_id, section__course=course)
+
+    try:
+        lesson.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+@require_POST
+def lesson_reorder_ajax(request, course_id, section_id):
+    """Reorder lessons via drag-and-drop."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    section = get_object_or_404(Section, id=section_id, course=course)
+
+    try:
+        data = json.loads(request.body)
+        lesson_ids = data.get('lesson_ids', [])
+
+        # Update order for each lesson
+        for index, lesson_id in enumerate(lesson_ids):
+            Lesson.objects.filter(id=lesson_id, section=section).update(order=index)
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

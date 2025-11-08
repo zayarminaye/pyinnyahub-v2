@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}သင်ခန်းစာ ဖန်တီးမည် - Step 4{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ဖန်တီးမည်</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Indicator -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Progress</small>
+                            <small class="text-muted">Step 4 of 5</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: 80%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 small">
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 1. Basic</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 2. Details</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 3. Media</span>
+                            <span class="text-primary fw-bold">4. Pricing</span>
+                            <span class="text-muted">5. Review</span>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Pricing & Access</h5>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">သင်တန်းကြေး (ကျပ်) <span class="text-danger">*</span></label>
+                            {{ form.price }}
+                            <small class="form-text text-muted d-block">{{ form.price.help_text }}</small>
+                            {% if form.price.errors %}
+                                <div class="text-danger small">{{ form.price.errors.0 }}</div>
+                            {% endif %}
+                            <div class="alert alert-info mt-2">
+                                <small>
+                                    <i class="bi bi-info-circle"></i> <strong>သတိပြုရန်:</strong><br>
+                                    • သင်တန်းကြေးကို ဂဏန်းဖြင့်သာ ထည့်သွင်းပါ<br>
+                                    • အခမဲ့ သင်ခန်းစာအတွက် 0 ဟု ထည့်ပါ<br>
+                                    • စျေးနှုန်းကို ကောင်းစွာ စဉ်းစားပြီး သတ်မှတ်ပါ
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Access Type <span class="text-danger">*</span></label>
+                            {{ form.access_type }}
+                            <small class="form-text text-muted d-block">{{ form.access_type.help_text }}</small>
+                            {% if form.access_type.errors %}
+                                <div class="text-danger small">{{ form.access_type.errors.0 }}</div>
+                            {% endif %}
+                            <div class="alert alert-warning mt-2">
+                                <small>
+                                    <i class="bi bi-exclamation-triangle"></i> <strong>ရှင်းလင်းချက်:</strong><br>
+                                    • <strong>လစဉ်:</strong> စာသင်ကျောင်းသား/သူများသည် လစဉ် ပေးချေရမည်<br>
+                                    • <strong>နှစ်စဉ်:</strong> နှစ်စဉ် ပေးချေရမည် (လစဉ်ထက် ပိုသက်သာသည်)<br>
+                                    • <strong>တစ်သက်တာ:</strong> တစ်ကြိမ်ပေးချေရုံဖြင့် အမြဲတမ်း အသုံးပြုနိုင်သည်
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'course_create_step3' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Next: Review & Submit <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
