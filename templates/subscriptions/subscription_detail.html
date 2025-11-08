@@ -66,8 +66,12 @@
                             </div>
                         </div>
                     {% empty %}
-                        <div class="alert alert-info text-center">
-                            <i class="bi bi-info-circle"></i> သင်ခန်းစာအကြောင်းအရာများ မရှိသေးပါ
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="bi bi-folder"></i>
+                            </div>
+                            <div class="empty-state-title">အကြောင်းအရာ မရှိသေးပါ</div>
+                            <div class="empty-state-message">သင်ခန်းစာအကြောင်းအရာများ မရှိသေးပါ။</div>
                         </div>
                     {% endfor %}
                 </div>

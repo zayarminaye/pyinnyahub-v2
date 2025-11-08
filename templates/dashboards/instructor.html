@@ -124,10 +124,13 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted text-center">သင်ခန်းစာ မရှိသေးပါ</p>
-                <div class="text-center">
-                    <p class="text-muted">သင်ခန်းစာ အသစ် ဖန်တီးရန် Django Admin Panel ကို အသုံးပြုပါ</p>
-                    <a href="/admin/" class="btn btn-primary" target="_blank">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="empty-state-title">သင်ခန်းစာ မရှိသေးပါ</div>
+                    <div class="empty-state-message">သင်ခန်းစာ အသစ် ဖန်တီးရန် Django Admin Panel ကို အသုံးပြုပါ။</div>
+                    <a href="/admin/" class="btn btn-primary empty-state-action" target="_blank">
                         <i class="bi bi-plus-circle"></i> Admin Panel သို့
                     </a>
                 </div>
