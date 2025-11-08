@@ -346,13 +346,13 @@ def instructor_dashboard_view(request):
     # Calculate total students enrolled in instructor's courses
     total_students = Subscription.objects.filter(
         course__instructor=request.user,
-        status='active'
+        is_active=True
     ).values('user').distinct().count()
 
     # Get recent enrollments
     recent_enrollments = Subscription.objects.filter(
         course__instructor=request.user,
-        status='active'
+        is_active=True
     ).select_related('user', 'course').order_by('-created_at')[:5]
 
     context = {
