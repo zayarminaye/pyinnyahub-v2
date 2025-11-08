@@ -386,6 +386,66 @@
         }
 
         /* ====================================== */
+        /* EMPTY STATE STYLES */
+        /* ====================================== */
+
+        .empty-state {
+            padding: 3rem 2rem;
+            text-align: center;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-message {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Permanent Alerts - distinct from flash messages */
+        .alert-permanent {
+            border-left: 4px solid;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+        }
+
+        .alert-permanent.alert-info {
+            border-left-color: var(--primary-color);
+            background-color: rgba(129, 140, 248, 0.05);
+        }
+
+        .alert-permanent.alert-warning {
+            border-left-color: var(--warning-color);
+            background-color: rgba(217, 119, 6, 0.05);
+        }
+
+        .alert-permanent.alert-danger {
+            border-left-color: var(--danger-color);
+            background-color: rgba(220, 38, 38, 0.05);
+        }
+
+        /* ====================================== */
         /* PROFESSIONAL FILE UPLOAD STYLES */
         /* ====================================== */
 
@@ -683,9 +743,9 @@
 
     <!-- Messages -->
     {% if messages %}
-        <div class="container mt-3">
+        <div class="container mt-3" id="django-messages">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show auto-dismiss" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -767,13 +827,14 @@
         }
     </script>
 
-    <!-- Auto-dismiss messages after 5 seconds -->
+    <!-- Auto-dismiss Django messages after 5 seconds -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get all alert messages
-            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            // Only auto-dismiss Django framework messages (login/logout/form submissions)
+            // NOT static informational alerts (empty states, dashboard info)
+            const djangoMessages = document.querySelectorAll('.auto-dismiss');
 
-            alerts.forEach(function(alert) {
+            djangoMessages.forEach(function(alert) {
                 // Auto-dismiss after 5 seconds (5000ms)
                 setTimeout(function() {
                     // Use Bootstrap's alert close method

@@ -8,34 +8,38 @@
 
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-secondary text-white">
+            <div class="card bg-primary text-white">
                 <div class="card-body">
-                    <h5><i class="bi bi-file-earmark"></i> Draft</h5>
-                    <h2>{{ draft_count }}</h2>
+                    <h5><i class="bi bi-people"></i> စာသင်ကျောင်းသား/သူများ</h5>
+                    <h2>{{ total_students }}</h2>
+                    <small>သင်ကြားနေသော စာသင်ကျောင်းသား/သူ စုစုပေါင်း</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-book"></i> သင်ခန်းစာများ</h5>
+                    <h2>{{ total_courses }}</h2>
+                    <small>ဖန်တီးထားသော သင်ခန်းစာ စုစုပေါင်း</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
-                    <h5><i class="bi bi-clock"></i> Pending Review</h5>
+                    <h5><i class="bi bi-clock"></i> စောင့်ဆိုင်းနေဆဲ</h5>
                     <h2>{{ pending_count }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5><i class="bi bi-x-circle"></i> Rejected</h5>
-                    <h2>{{ rejected_count }}</h2>
+                    <small>အတည်ပြုမှုကို စောင့်ဆိုင်းနေသော သင်ခန်းစာ</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h5><i class="bi bi-check-circle"></i> Published</h5>
+                    <h5><i class="bi bi-check-circle"></i> ထုတ်ဝေပြီး</h5>
                     <h2>{{ published_count }}</h2>
+                    <small>ထုတ်ဝေပြီး သင်ခန်းစာများ</small>
                 </div>
             </div>
         </div>
@@ -124,15 +128,54 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted text-center">သင်ခန်းစာ မရှိသေးပါ</p>
-                <div class="text-center">
-                    <p class="text-muted">သင်ခန်းစာ အသစ် ဖန်တီးရန် Django Admin Panel ကို အသုံးပြုပါ</p>
-                    <a href="/admin/" class="btn btn-primary" target="_blank">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="empty-state-title">သင်ခန်းစာ မရှိသေးပါ</div>
+                    <div class="empty-state-message">သင်ခန်းစာ အသစ် ဖန်တီးရန် Django Admin Panel ကို အသုံးပြုပါ။</div>
+                    <a href="/admin/" class="btn btn-primary empty-state-action" target="_blank">
                         <i class="bi bi-plus-circle"></i> Admin Panel သို့
                     </a>
                 </div>
             {% endif %}
         </div>
     </div>
+
+    <!-- Recent Enrollments -->
+    {% if recent_enrollments %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-person-plus"></i> မကြာသေးမီ စာရင်းသွင်းသူများ</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>စာသင်ကျောင်းသား/သူ</th>
+                            <th>သင်ခန်းစာ</th>
+                            <th>စာရင်းသွင်းသည့်ရက်</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in recent_enrollments %}
+                        <tr>
+                            <td>
+                                <i class="bi bi-person-circle text-primary"></i>
+                                {{ enrollment.user.get_full_name }}
+                                <br>
+                                <small class="text-muted">{{ enrollment.user.email }}</small>
+                            </td>
+                            <td>{{ enrollment.course.title }}</td>
+                            <td>{{ enrollment.created_at|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

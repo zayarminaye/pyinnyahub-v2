@@ -8,9 +8,11 @@
 
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="alert alert-info">
-                <h5>မင်္ဂလာပါ {{ user.get_full_name }}!</h5>
-                <p>သင့်တွင် စာရင်းသွင်းထားသော သင်ခန်းစာများကို ဤနေရာတွင် တွေ့ရှိနိုင်ပါသည်။</p>
+            <div class="card">
+                <div class="card-body">
+                    <h5>မင်္ဂလာပါ {{ user.get_full_name }}!</h5>
+                    <p class="mb-0 text-muted">သင့်တွင် စာရင်းသွင်းထားသော သင်ခန်းစာများကို ဤနေရာတွင် တွေ့ရှိနိုင်ပါသည်။</p>
+                </div>
             </div>
         </div>
     </div>
@@ -40,9 +42,15 @@
             {% endfor %}
         {% else %}
             <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i> သင့်တွင် စာရင်းသွင်းထားသော သင်ခန်းစာ မရှိသေးပါ။
-                    <a href="{% url 'course_list' %}" class="alert-link">သင်ခန်းစာများ ရှာကြည့်မည်</a>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="empty-state-title">သင်ခန်းစာ မရှိသေးပါ</div>
+                    <div class="empty-state-message">သင့်တွင် စာရင်းသွင်းထားသော သင်ခန်းစာ မရှိသေးပါ။</div>
+                    <a href="{% url 'course_list' %}" class="btn btn-primary empty-state-action">
+                        <i class="bi bi-search"></i> သင်ခန်းစာများ ရှာကြည့်မည်
+                    </a>
                 </div>
             </div>
         {% endif %}

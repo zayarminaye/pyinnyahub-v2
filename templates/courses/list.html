@@ -60,8 +60,15 @@
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i> သင်ခန်းစာများ မတွေ့ရှိပါ
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div class="empty-state-title">သင်ခန်းစာ မတွေ့ရှိပါ</div>
+                    <div class="empty-state-message">ရှာဖွေမှုနှင့် ကိုက်ညီသော သင်ခန်းစာများ မတွေ့ရှိပါ။</div>
+                    <a href="{% url 'course_list' %}" class="btn btn-primary empty-state-action">
+                        <i class="bi bi-arrow-clockwise"></i> အားလုံး ပြန်ကြည့်မည်
+                    </a>
                 </div>
             </div>
         {% endfor %}
