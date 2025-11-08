@@ -84,8 +84,11 @@
     {% endif %}
 
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-book"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</h5>
+            <a href="{% url 'instructor_courses' %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-gear"></i> သင်ခန်းစာများ စီမံခန့်ခွဲမည်
+            </a>
         </div>
         <div class="card-body">
             {% if courses %}
@@ -133,9 +136,9 @@
                         <i class="bi bi-book"></i>
                     </div>
                     <div class="empty-state-title">သင်ခန်းစာ မရှိသေးပါ</div>
-                    <div class="empty-state-message">သင်ခန်းစာ အသစ် ဖန်တီးရန် Django Admin Panel ကို အသုံးပြုပါ။</div>
-                    <a href="/admin/" class="btn btn-primary empty-state-action" target="_blank">
-                        <i class="bi bi-plus-circle"></i> Admin Panel သို့
+                    <div class="empty-state-message">သင်ခန်းစာ အသစ် ဖန်တီးပြီး သင်ကြားခြင်း ကို စတင်ပါ။</div>
+                    <a href="{% url 'instructor_courses' %}" class="btn btn-primary empty-state-action">
+                        <i class="bi bi-plus-circle"></i> သင်ခန်းစာ စီမံခန့်ခွဲမည်
                     </a>
                 </div>
             {% endif %}
