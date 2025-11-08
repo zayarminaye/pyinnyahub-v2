@@ -4,6 +4,7 @@ These models provide common functionality and promote DRY principles.
 """
 from django.db import models
 from django.utils import timezone
+from django.core.cache import cache
 
 
 class TimeStampedModel(models.Model):
@@ -200,3 +201,163 @@ class SystemSettings(models.Model):
         """Get the singleton settings instance."""
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
+
+
+class SystemMessage(TimeStampedModel):
+    """
+    Editable system messages for all notifications, alerts, and user feedback.
+    Allows admins to customize message tone and content without code changes.
+
+    Real-world LMS best practice: All user-facing messages should be editable
+    to match the target audience's language style and cultural context.
+    """
+    MESSAGE_TYPES = (
+        ('success', 'Success'),
+        ('error', 'Error'),
+        ('warning', 'Warning'),
+        ('info', 'Info'),
+        ('email', 'Email'),
+        ('notification', 'Notification'),
+    )
+
+    CATEGORIES = (
+        ('auth', 'Authentication'),
+        ('course', 'Course'),
+        ('payment', 'Payment'),
+        ('instructor', 'Instructor'),
+        ('subscription', 'Subscription'),
+        ('file_upload', 'File Upload'),
+        ('general', 'General'),
+    )
+
+    # Unique identifier for code reference
+    key = models.CharField(
+        max_length=100,
+        unique=True,
+        db_index=True,
+        help_text='Unique key to reference this message in code (e.g., "file_upload_success")'
+    )
+
+    # Categorization
+    category = models.CharField(max_length=50, choices=CATEGORIES, default='general')
+    message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES, default='info')
+
+    # Message content (bilingual)
+    message_burmese = models.TextField(
+        help_text='Message in Burmese (သဘာဝကျကျ ရေးပါ - not too formal or informal)',
+        blank=True
+    )
+    message_english = models.TextField(
+        help_text='Message in English',
+        blank=True
+    )
+
+    # Optional variables that can be used in messages
+    # Example: "သင်ခန်းစာ {course_title} ကို အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ။"
+    variables = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of variable names (e.g., ["course_title", "user_name"])'
+    )
+
+    # Metadata
+    description = models.CharField(
+        max_length=255,
+        help_text='Description of when this message is used',
+        blank=True
+    )
+    is_active = models.BooleanField(default=True)
+
+    # Admin notes
+    admin_notes = models.TextField(
+        blank=True,
+        help_text='Internal notes for admins'
+    )
+
+    class Meta:
+        db_table = 'system_messages'
+        verbose_name = 'System Message'
+        verbose_name_plural = 'System Messages'
+        ordering = ['category', 'key']
+        indexes = [
+            models.Index(fields=['key', 'is_active']),
+            models.Index(fields=['category']),
+        ]
+
+    def __str__(self):
+        return f"{self.category} - {self.key}"
+
+    def get_message(self, lang='burmese', **context):
+        """
+        Get formatted message with variable substitution.
+
+        Args:
+            lang: 'burmese' or 'english'
+            **context: Variables to substitute in message
+
+        Returns:
+            str: Formatted message
+        """
+        message = self.message_burmese if lang == 'burmese' else self.message_english
+
+        if not message:
+            # Fallback to other language if preferred not available
+            message = self.message_english if lang == 'burmese' else self.message_burmese
+
+        # Substitute variables
+        if context and message:
+            try:
+                message = message.format(**context)
+            except KeyError:
+                # If some variables are missing, just return the template
+                pass
+
+        return message or f"[Message not set: {self.key}]"
+
+    def get_bilingual_message(self, **context):
+        """
+        Get both Burmese and English messages.
+
+        Returns:
+            str: "Burmese message\nEnglish message"
+        """
+        messages = []
+        if self.message_burmese:
+            messages.append(self.get_message('burmese', **context))
+        if self.message_english:
+            messages.append(self.get_message('english', **context))
+
+        return '\n'.join(messages) if messages else f"[Message not set: {self.key}]"
+
+    @classmethod
+    def get(cls, key, lang='burmese', **context):
+        """
+        Convenience method to get message by key with caching.
+
+        Args:
+            key: Message key
+            lang: 'burmese', 'english', or 'both'
+            **context: Variables for substitution
+
+        Returns:
+            str: Formatted message
+        """
+        cache_key = f'system_message_{key}'
+        message_obj = cache.get(cache_key)
+
+        if not message_obj:
+            try:
+                message_obj = cls.objects.get(key=key, is_active=True)
+                cache.set(cache_key, message_obj, 3600)  # Cache for 1 hour
+            except cls.DoesNotExist:
+                return f"[Message not found: {key}]"
+
+        if lang == 'both':
+            return message_obj.get_bilingual_message(**context)
+        else:
+            return message_obj.get_message(lang, **context)
+
+    def save(self, *args, **kwargs):
+        """Clear cache on save."""
+        super().save(*args, **kwargs)
+        cache.delete(f'system_message_{self.key}')
