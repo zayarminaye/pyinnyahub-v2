@@ -12,6 +12,7 @@ from .forms import (
     CourseBasicInfoForm, CourseDetailsForm, CourseMediaForm,
     CoursePricingForm, CourseEditForm
 )
+from core.message_helper import show_message
 
 
 def course_list_view(request):
@@ -259,7 +260,7 @@ def course_create_step3(request):
             # Store file data in session
             request.session['course_wizard'].update(wizard_file_data)
             request.session.modified = True
-            messages.success(request, 'Step 3 ပြီးဆုံးပါပြီ။ Step 4 သို့ ဆက်လက်လုပ်ဆောင်ပါ။')
+            show_message(request, 'step_completed', step_number=3, next_step=4)
             return redirect('course_create_step4')
     else:
         form = CourseMediaForm()
@@ -335,24 +336,33 @@ def course_create_step5(request):
                 status=status,
             )
 
+            # Save course first without files
+            course.save()
+
             # Files were already uploaded in step3 via storage service
-            # Just assign the file paths to the course
+            # Now assign the file paths to the saved course instance
+            files_updated = False
             if wizard_data.get('thumbnail_path'):
-                course.thumbnail = wizard_data['thumbnail_path']
+                course.thumbnail.name = wizard_data['thumbnail_path']
+                files_updated = True
 
             if wizard_data.get('promo_video_path'):
-                course.promo_video = wizard_data['promo_video_path']
+                course.promo_video.name = wizard_data['promo_video_path']
+                files_updated = True
 
-            course.save()
+            # Save again with file references if any files were uploaded
+            if files_updated:
+                course.save(update_fields=['thumbnail', 'promo_video'])
 
             # Clear wizard session
             del request.session['course_wizard']
             request.session.modified = True
 
+            # Show success message using SystemMessage
             if status == 'draft':
-                messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို Draft အဖြစ် သိမ်းဆည်းပြီးပါပြီ။')
+                show_message(request, 'course_created_draft', course_title=course.title)
             else:
-                messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို Admin သုံးသပ်ရန် တင်သွင်းပြီးပါပြီ။')
+                show_message(request, 'course_submitted_review', course_title=course.title)
 
             return redirect('instructor_courses')
 
