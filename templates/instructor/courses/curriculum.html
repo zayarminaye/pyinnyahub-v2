@@ -425,12 +425,13 @@ function deleteLesson(id, title) {
 
 // Toast notification function
 function showToast(message, type = 'info') {
-    // You can implement a better toast notification system
-    // For now, using simple alert
     const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
     alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.style.maxWidth = '600px';
+    alertDiv.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
     alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -439,7 +440,7 @@ function showToast(message, type = 'info') {
 
     setTimeout(() => {
         alertDiv.remove();
-    }, 3000);
+    }, 5000);
 }
 </script>
 
