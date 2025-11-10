@@ -207,7 +207,18 @@ class Course(SoftDeleteModel, PublishableModel):
         ]
 
     def save(self, *args, **kwargs):
-        """Override save to process thumbnail image."""
+        """Override save to auto-generate slug and process thumbnail image."""
+        # Auto-generate slug if empty
+        if not self.slug and self.title:
+            from django.utils.text import slugify
+            base_slug = slugify(self.title)
+            slug = base_slug
+            counter = 1
+            while Course.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+
         # Only process if a new file is being uploaded
         if self.thumbnail and isinstance(self.thumbnail, (InMemoryUploadedFile, TemporaryUploadedFile)):
             try:

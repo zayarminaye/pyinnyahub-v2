@@ -1,11 +1,15 @@
 """
 Views for Courses app.
 """
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.utils.text import slugify
+from django.db import models
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .models import Course, Category, Section, Lesson
 from .decorators import instructor_required, owns_course
 from .forms import (
@@ -459,10 +463,6 @@ def course_curriculum_view(request, course_id):
 # ============================================================================
 # CURRICULUM MANAGEMENT AJAX ENDPOINTS
 # ============================================================================
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-import json
 
 
 @login_required
