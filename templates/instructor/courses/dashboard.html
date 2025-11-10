@@ -167,11 +167,13 @@
                             <td>{{ course.created_at|date:"d/m/Y" }}</td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
+                                    {% if course.slug %}
                                     <a href="{% url 'course_detail' course.slug %}"
                                        class="btn btn-outline-primary"
                                        title="ကြည့်မည်">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    {% endif %}
                                     <a href="{% url 'course_edit' course.id %}"
                                        class="btn btn-outline-secondary"
                                        title="ပြုပြင်မည်">

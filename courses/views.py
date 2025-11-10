@@ -335,23 +335,15 @@ def course_create_step5(request):
                 status=status,
             )
 
-            # Save course first without files
-            course.save()
-
             # Files were already uploaded in step3 via storage service
-            # Now assign the file paths to the saved course instance
-            files_updated = False
+            # Assign paths before saving
             if wizard_data.get('thumbnail_path'):
-                course.thumbnail.name = wizard_data['thumbnail_path']
-                files_updated = True
+                course.thumbnail = wizard_data['thumbnail_path']
 
             if wizard_data.get('promo_video_path'):
-                course.promo_video.name = wizard_data['promo_video_path']
-                files_updated = True
+                course.promo_video = wizard_data['promo_video_path']
 
-            # Save again with file references if any files were uploaded
-            if files_updated:
-                course.save(update_fields=['thumbnail', 'promo_video'])
+            course.save()
 
             # Clear wizard session
             del request.session['course_wizard']
