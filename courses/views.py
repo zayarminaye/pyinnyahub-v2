@@ -588,10 +588,14 @@ def lesson_create_ajax(request, course_id, section_id):
         content_type = data.get('content_type', 'video')
 
         if not title:
-            return JsonResponse({'success': False, 'error': 'Title is required'}, status=400)
+            return JsonResponse({
+                'success': False,
+                'error': 'Lesson အမည် ထည့်ရန် လိုအပ်ပါသည်။ / Title is required.'
+            }, status=400)
 
-        # Get the next order number
-        max_order = section.lessons.aggregate(models.Max('order'))['order__max'] or -1
+        # Get the next order number (explicitly check for None to handle order=0)
+        max_order_result = section.lessons.aggregate(models.Max('order'))['order__max']
+        max_order = max_order_result if max_order_result is not None else -1
 
         lesson = Lesson.objects.create(
             section=section,
@@ -610,7 +614,13 @@ def lesson_create_ajax(request, course_id, section_id):
             }
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating lesson: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': 'Lesson ဖန်တီးရာတွင် အမှားအယွင်း ရှိပါသည်။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။ / Error creating lesson. Please try again.'
+        }, status=500)
 
 
 @login_required
