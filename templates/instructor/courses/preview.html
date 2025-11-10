@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Preview: {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <!-- Preview Banner -->
+    <div class="alert alert-warning border-start border-warning border-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="alert-heading mb-1">
+                    <i class="bi bi-eye"></i> Preview Mode
+                </h5>
+                <p class="mb-0">This is how students will see your course. Video playback and interactive features are fully functional.</p>
+            </div>
+            <a href="{% url 'course_curriculum' course.id %}" class="btn btn-sm btn-warning">
+                <i class="bi bi-pencil"></i> Edit Curriculum
+            </a>
+        </div>
+    </div>
+
+    <!-- Course Header -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                {% if course.thumbnail %}
+                <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="max-height: 400px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">{{ course.title }}</h1>
+                    <p class="text-muted">
+                        <i class="bi bi-person"></i> {{ course.instructor.get_full_name }}
+                        <span class="mx-2">|</span>
+                        <i class="bi bi-tag"></i> {{ course.category.name }}
+                        <span class="mx-2">|</span>
+                        <i class="bi bi-clock"></i> {{ course.duration_hours }} hours
+                    </p>
+                    <p class="card-text">{{ course.short_description }}</p>
+
+                    {% if course.promo_video %}
+                    <div class="ratio ratio-16x9 mb-3">
+                        {% if course.promo_video.url %}
+                        <video controls>
+                            <source src="{{ course.promo_video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <h5>What you'll learn:</h5>
+                        <div class="bg-light p-3 rounded">{{ course.what_you_will_learn }}</div>
+                    </div>
+
+                    {% if course.requirements %}
+                    <div class="mt-3">
+                        <h5>Requirements:</h5>
+                        <div class="bg-light p-3 rounded">{{ course.requirements }}</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <h5>Description:</h5>
+                        <div>{{ course.description|linebreaks }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Curriculum -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="mb-4"><i class="bi bi-list-ul"></i> Course Curriculum</h2>
+
+            {% if sections %}
+                {% for section in sections %}
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-folder"></i> {{ section.title }}
+                            <span class="badge bg-light text-dark ms-2">{{ section.lessons.count }} lesson{{ section.lessons.count|pluralize }}</span>
+                        </h5>
+                        {% if section.description %}
+                        <small>{{ section.description }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for lesson in section.lessons.all %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-{% if lesson.content_type == 'video' %}play-circle{% elif lesson.content_type == 'text' %}file-text{% elif lesson.content_type == 'quiz' %}question-circle{% else %}file-earmark{% endif %} text-primary"></i>
+                                        {{ lesson.title }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        <span class="badge bg-info">{{ lesson.get_content_type_display }}</span>
+                                        {% if lesson.duration_minutes %}
+                                        <span class="ms-2"><i class="bi bi-clock"></i> {{ lesson.duration_minutes }} min</span>
+                                        {% endif %}
+                                    </small>
+
+                                    <!-- Lesson Content Preview -->
+                                    <div class="mt-3">
+                                        {% if lesson.content_type == 'video' %}
+                                            {% if lesson.video_file %}
+                                            <div class="ratio ratio-16x9">
+                                                <video controls>
+                                                    <source src="{{ lesson.video_file.url }}" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                            {% elif lesson.video_url %}
+                                            <div class="ratio ratio-16x9">
+                                                <iframe src="{{ lesson.video_url }}" allowfullscreen></iframe>
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> No video content uploaded yet
+                                            </div>
+                                            {% endif %}
+                                        {% elif lesson.content_type == 'text' %}
+                                            {% if lesson.text_content %}
+                                            <div class="bg-light p-3 rounded">
+                                                {{ lesson.text_content|linebreaks }}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> No text content added yet
+                                            </div>
+                                            {% endif %}
+                                        {% elif lesson.content_type == 'quiz' %}
+                                            {% if lesson.text_content %}
+                                            <div class="bg-light p-3 rounded">
+                                                <strong>Quiz Questions:</strong>
+                                                {{ lesson.text_content|linebreaks }}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> No quiz content added yet
+                                            </div>
+                                            {% endif %}
+                                        {% elif lesson.content_type == 'assignment' %}
+                                            {% if lesson.text_content %}
+                                            <div class="bg-light p-3 rounded">
+                                                <strong>Assignment Instructions:</strong>
+                                                {{ lesson.text_content|linebreaks }}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> No assignment instructions added yet
+                                            </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No curriculum added yet. Go back to curriculum manager to add sections and lessons.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="row mt-4">
+        <div class="col-lg-8 mx-auto text-center">
+            <a href="{% url 'course_curriculum' course.id %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-pencil"></i> Back to Edit Curriculum
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
