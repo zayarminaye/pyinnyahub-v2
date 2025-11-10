@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Lesson Content - {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-file-earmark-arrow-up"></i> Edit Lesson Content</h2>
+                    <p class="text-muted mb-0">{{ section.title }} - {{ lesson.title }}</p>
+                    <small class="text-muted">Content Type: <strong>{{ lesson.get_content_type_display }}</strong></small>
+                </div>
+                <a href="{% url 'course_curriculum' course.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Curriculum
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if lesson.content_type == 'video' %}
+                        <!-- Video Content -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Video Content</h5>
+
+                            <div class="mb-3">
+                                <label class="form-label">Upload Video File</label>
+                                <input type="file" class="form-control" name="video_file" accept="video/*">
+                                <small class="form-text text-muted">Maximum 500MB, MP4/WEBM format recommended</small>
+                                {% if lesson.video_file %}
+                                <div class="mt-2">
+                                    <i class="bi bi-check-circle text-success"></i> Current: {{ lesson.video_file.name }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="text-center my-3"><strong>OR</strong></div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Video URL (YouTube, Vimeo, etc.)</label>
+                                <input type="url" class="form-control" name="video_url" value="{{ lesson.video_url|default:'' }}" placeholder="https://www.youtube.com/watch?v=...">
+                                <small class="form-text text-muted">Paste YouTube or Vimeo URL</small>
+                            </div>
+                        </div>
+
+                        {% elif lesson.content_type == 'text' %}
+                        <!-- Text Content -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Text Content</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Lesson Content</label>
+                                <textarea class="form-control" name="text_content" rows="15" placeholder="Write your lesson content here...">{{ lesson.text_content|default:'' }}</textarea>
+                                <small class="form-text text-muted">You can use markdown formatting</small>
+                            </div>
+                        </div>
+
+                        {% elif lesson.content_type == 'quiz' %}
+                        <!-- Quiz Content -->
+                        <div class="mb-4">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Quiz builder coming soon. For now, you can add text content with questions.
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Quiz Questions</label>
+                                <textarea class="form-control" name="text_content" rows="15" placeholder="Enter quiz questions...">{{ lesson.text_content|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        {% elif lesson.content_type == 'assignment' %}
+                        <!-- Assignment Content -->
+                        <div class="mb-4">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Assignment system coming soon. For now, you can add text instructions.
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Assignment Instructions</label>
+                                <textarea class="form-control" name="text_content" rows="15" placeholder="Enter assignment instructions...">{{ lesson.text_content|default:'' }}</textarea>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Duration -->
+                        <div class="mb-3">
+                            <label class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" name="duration_minutes" value="{{ lesson.duration_minutes|default:'' }}" placeholder="e.g., 15">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save Content
+                            </button>
+                            <a href="{% url 'course_curriculum' course.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

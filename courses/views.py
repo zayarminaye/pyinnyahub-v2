@@ -681,3 +681,58 @@ def lesson_reorder_ajax(request, course_id, section_id):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@instructor_required
+def lesson_content_edit(request, course_id, lesson_id):
+    """Edit lesson content (video, text, files)."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    lesson = get_object_or_404(Lesson, id=lesson_id, section__course=course)
+
+    if request.method == 'POST':
+        try:
+            # Handle video upload
+            if lesson.content_type == 'video' and 'video_file' in request.FILES:
+                from core.storage_service import handle_file_upload, upload_lesson_video
+                success, result, url = handle_file_upload(
+                    upload_lesson_video,
+                    request.FILES['video_file'],
+                    lesson_id=lesson.id
+                )
+                if success:
+                    lesson.video_file = result
+                    messages.success(request, 'ဗီဒီယို upload ပြီးပါပြီ။ / Video uploaded successfully.')
+                else:
+                    messages.error(request, result)
+                    return redirect('lesson_content_edit', course_id=course_id, lesson_id=lesson_id)
+
+            # Handle video URL
+            if lesson.content_type == 'video' and 'video_url' in request.POST:
+                lesson.video_url = request.POST.get('video_url', '').strip()
+
+            # Handle text content
+            if lesson.content_type == 'text' and 'text_content' in request.POST:
+                lesson.text_content = request.POST.get('text_content', '').strip()
+
+            # Handle duration
+            duration = request.POST.get('duration_minutes', '').strip()
+            if duration:
+                lesson.duration_minutes = int(duration)
+
+            lesson.save()
+            messages.success(request, 'Lesson content သိမ်းဆည်းပြီးပါပြီ။ / Lesson content saved.')
+            return redirect('course_curriculum', course_id=course_id)
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error saving lesson content: {str(e)}", exc_info=True)
+            messages.error(request, f'အမှားအယွင်း ရှိပါသည်။ / Error: {str(e)}')
+
+    context = {
+        'course': course,
+        'lesson': lesson,
+        'section': lesson.section,
+    }
+    return render(request, 'instructor/courses/lesson_content_edit.html', context)
