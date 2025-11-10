@@ -159,6 +159,11 @@
                         <input type="text" class="form-control" id="lessonTitle" required>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Lesson Description</label>
+                        <textarea class="form-control" id="lessonDescription" rows="2" placeholder="Brief description of what this lesson covers (optional)"></textarea>
+                    </div>
+
                     <div class="mb-3" id="contentTypeGroup">
                         <label class="form-label">Content Type <span class="text-danger">*</span></label>
                         <select class="form-select" id="lessonContentType" onchange="toggleContentFields()">
@@ -431,15 +436,50 @@ function showAddLessonModal(sectionId) {
 }
 
 function editLesson(id, title) {
-    document.getElementById('lessonModalTitle').textContent = 'Edit Lesson Title';
+    document.getElementById('lessonModalTitle').textContent = 'Edit Lesson';
     document.getElementById('lessonId').value = id;
-    document.getElementById('lessonTitle').value = title;
-    document.getElementById('contentTypeGroup').style.display = 'none';
 
-    // Hide all content fields for editing (just title)
-    document.querySelectorAll('.content-fields').forEach(el => el.style.display = 'none');
+    // Fetch lesson data via AJAX
+    fetch(`/courses/instructor/${courseId}/lessons/${id}/get/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const lesson = data.lesson;
 
-    new bootstrap.Modal(document.getElementById('lessonModal')).show();
+                // Populate basic fields
+                document.getElementById('lessonTitle').value = lesson.title;
+                document.getElementById('lessonDescription').value = lesson.description || '';
+                document.getElementById('lessonDuration').value = lesson.duration_minutes || '';
+                document.getElementById('lessonContentType').value = lesson.content_type;
+
+                // Show content type (but as readonly)
+                document.getElementById('contentTypeGroup').style.display = 'block';
+                document.getElementById('lessonContentType').disabled = true;
+
+                // Load content based on type
+                if (lesson.content_type === 'video') {
+                    document.getElementById('videoUrl').value = lesson.video_url || '';
+                    // Note: Can't re-populate file input for security reasons
+                } else if (lesson.content_type === 'text') {
+                    document.getElementById('textContent').value = lesson.text_content || '';
+                } else if (lesson.content_type === 'quiz') {
+                    document.getElementById('quizContent').value = lesson.text_content || '';
+                } else if (lesson.content_type === 'assignment') {
+                    document.getElementById('assignmentContent').value = lesson.text_content || '';
+                }
+
+                // Show appropriate content fields
+                toggleContentFields();
+
+                new bootstrap.Modal(document.getElementById('lessonModal')).show();
+            } else {
+                showToast('Failed to load lesson data', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error loading lesson data', 'error');
+        });
 }
 
 function toggleContentFields() {
@@ -479,36 +519,85 @@ function saveLesson() {
     const id = document.getElementById('lessonId').value;
     const sectionId = document.getElementById('lessonSectionId').value;
     const title = document.getElementById('lessonTitle').value.trim();
+    const description = document.getElementById('lessonDescription').value.trim();
 
     if (!title) {
         showToast('Lesson အမည် ထည့်ရန် လိုအပ်ပါသည်။ / Lesson title is required', 'error');
         return;
     }
 
-    // If editing, just update title
+    // If editing, update all fields
     if (id) {
-        fetch(`/courses/instructor/${courseId}/lessons/${id}/update/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({ title })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById('lessonModal')).hide();
-                showToast('Lesson title updated successfully', 'success');
-                location.reload();
-            } else {
-                showToast(data.error || 'Failed to update lesson', 'error');
+        const contentType = document.getElementById('lessonContentType').value;
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+
+        // Add content based on type
+        if (contentType === 'video') {
+            const videoFile = document.getElementById('videoFile').files[0];
+            const videoUrl = document.getElementById('videoUrl').value.trim();
+
+            if (videoFile) {
+                formData.append('video_file', videoFile);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error updating lesson', 'error');
+            if (videoUrl) {
+                formData.append('video_url', videoUrl);
+            }
+        } else if (contentType === 'text') {
+            const textContent = document.getElementById('textContent').value.trim();
+            if (textContent) formData.append('text_content', textContent);
+        } else if (contentType === 'quiz') {
+            const quizContent = document.getElementById('quizContent').value.trim();
+            if (quizContent) formData.append('text_content', quizContent);
+        } else if (contentType === 'assignment') {
+            const assignmentContent = document.getElementById('assignmentContent').value.trim();
+            if (assignmentContent) formData.append('text_content', assignmentContent);
+        }
+
+        // Add duration
+        const duration = document.getElementById('lessonDuration').value;
+        if (duration) formData.append('duration_minutes', duration);
+
+        // Disable save button
+        const saveBtn = document.getElementById('saveLessonBtn');
+        const saveBtnText = document.getElementById('saveBtnText');
+        const saveBtnSpinner = document.getElementById('saveBtnSpinner');
+        saveBtn.disabled = true;
+        saveBtnSpinner.style.display = 'inline-block';
+        saveBtnText.textContent = 'Saving...';
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.addEventListener('load', function() {
+            saveBtn.disabled = false;
+            saveBtnSpinner.style.display = 'none';
+            saveBtnText.textContent = 'Save Lesson';
+
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('lessonModal')).hide();
+                    showToast('Lesson updated successfully', 'success');
+                    location.reload();
+                } else {
+                    showToast(data.error || 'Failed to update lesson', 'error');
+                }
+            } else {
+                showToast('Error updating lesson', 'error');
+            }
         });
+
+        xhr.addEventListener('error', function() {
+            saveBtn.disabled = false;
+            saveBtnSpinner.style.display = 'none';
+            saveBtnText.textContent = 'Save Lesson';
+            showToast('Network error occurred', 'error');
+        });
+
+        xhr.open('POST', `/courses/instructor/${courseId}/lessons/${id}/update/`);
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        xhr.send(formData);
         return;
     }
 
@@ -516,6 +605,7 @@ function saveLesson() {
     const contentType = document.getElementById('lessonContentType').value;
     const formData = new FormData();
     formData.append('title', title);
+    formData.append('description', description);
     formData.append('content_type', contentType);
 
     // Add content based on type
