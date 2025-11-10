@@ -32,6 +32,7 @@ urlpatterns = [
     path('instructor/<int:course_id>/sections/<int:section_id>/delete/', views.section_delete_ajax, name='section_delete_ajax'),
     path('instructor/<int:course_id>/sections/reorder/', views.section_reorder_ajax, name='section_reorder_ajax'),
     path('instructor/<int:course_id>/sections/<int:section_id>/lessons/create/', views.lesson_create_ajax, name='lesson_create_ajax'),
+    path('instructor/<int:course_id>/lessons/<int:lesson_id>/get/', views.lesson_get_ajax, name='lesson_get_ajax'),
     path('instructor/<int:course_id>/lessons/<int:lesson_id>/update/', views.lesson_update_ajax, name='lesson_update_ajax'),
     path('instructor/<int:course_id>/lessons/<int:lesson_id>/delete/', views.lesson_delete_ajax, name='lesson_delete_ajax'),
     path('instructor/<int:course_id>/sections/<int:section_id>/lessons/reorder/', views.lesson_reorder_ajax, name='lesson_reorder_ajax'),

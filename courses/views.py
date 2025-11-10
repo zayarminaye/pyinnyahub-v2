@@ -451,7 +451,7 @@ def course_delete_view(request, course_id):
 def course_curriculum_view(request, course_id):
     """Manage course curriculum."""
     course = get_object_or_404(Course, id=course_id)
-    sections = course.sections.all().prefetch_related('lessons')
+    sections = course.sections.all().order_by('order').prefetch_related('lessons')
 
     context = {
         'course': course,
@@ -585,6 +585,7 @@ def lesson_create_ajax(request, course_id, section_id):
     try:
         # Handle FormData (multipart/form-data)
         title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
         content_type = request.POST.get('content_type', 'video')
 
         if not title:
@@ -601,6 +602,7 @@ def lesson_create_ajax(request, course_id, section_id):
         lesson = Lesson.objects.create(
             section=section,
             title=title,
+            description=description,
             content_type=content_type,
             order=max_order + 1
         )
@@ -662,15 +664,71 @@ def lesson_create_ajax(request, course_id, section_id):
 
 @login_required
 @instructor_required
+def lesson_get_ajax(request, course_id, lesson_id):
+    """Get lesson data via AJAX."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    lesson = get_object_or_404(Lesson, id=lesson_id, section__course=course)
+
+    return JsonResponse({
+        'success': True,
+        'lesson': {
+            'id': lesson.id,
+            'title': lesson.title,
+            'description': lesson.description or '',
+            'content_type': lesson.content_type,
+            'video_url': lesson.video_url or '',
+            'text_content': lesson.text_content or '',
+            'duration_minutes': lesson.duration_minutes or 0,
+        }
+    })
+
+
+@login_required
+@instructor_required
 @require_POST
 def lesson_update_ajax(request, course_id, lesson_id):
-    """Update lesson via AJAX."""
+    """Update lesson via AJAX with content."""
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
     lesson = get_object_or_404(Lesson, id=lesson_id, section__course=course)
 
     try:
-        data = json.loads(request.body)
-        lesson.title = data.get('title', lesson.title).strip()
+        # Handle FormData (multipart/form-data)
+        lesson.title = request.POST.get('title', lesson.title).strip()
+        lesson.description = request.POST.get('description', '').strip()
+
+        # Handle content based on type
+        if lesson.content_type == 'video':
+            # Handle video file upload
+            if 'video_file' in request.FILES:
+                from core.storage_service import handle_file_upload, upload_lesson_video
+                success, result, url = handle_file_upload(
+                    upload_lesson_video,
+                    request.FILES['video_file'],
+                    lesson_id=lesson.id
+                )
+                if success:
+                    lesson.video_file = result
+                else:
+                    return JsonResponse({'success': False, 'error': result}, status=400)
+
+            # Handle video URL
+            video_url = request.POST.get('video_url', '').strip()
+            if video_url:
+                lesson.video_url = video_url
+
+        elif lesson.content_type in ['text', 'quiz', 'assignment']:
+            text_content = request.POST.get('text_content', '').strip()
+            if text_content:
+                lesson.text_content = text_content
+
+        # Handle duration
+        duration = request.POST.get('duration_minutes', '').strip()
+        if duration:
+            try:
+                lesson.duration_minutes = int(duration)
+            except ValueError:
+                pass
+
         lesson.save()
 
         return JsonResponse({
@@ -681,7 +739,13 @@ def lesson_update_ajax(request, course_id, lesson_id):
             }
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error updating lesson: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': 'Lesson update မအောင်မြင်ပါ။ / Failed to update lesson.'
+        }, status=500)
 
 
 @login_required
