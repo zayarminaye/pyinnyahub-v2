@@ -121,9 +121,13 @@
                                 <td>{{ course.price }} ကျပ်</td>
                                 <td>{{ course.created_at|date:"d/m/Y" }}</td>
                                 <td>
+                                    {% if course.slug %}
                                     <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i> ကြည့်မည်
                                     </a>
+                                    {% else %}
+                                    <span class="text-muted small">No slug</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
