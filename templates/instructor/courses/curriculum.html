@@ -176,8 +176,19 @@
 
                     <!-- Video Content Fields -->
                     <div id="videoContentFields" class="content-fields">
+                        <!-- Current Video Display -->
+                        <div id="currentVideoDisplay" class="mb-3" style="display:none;">
+                            <div class="alert alert-info">
+                                <i class="bi bi-film"></i> <strong>Current Video:</strong>
+                                <span id="currentVideoName"></span>
+                                <a id="currentVideoLink" href="#" target="_blank" class="ms-2">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Upload Video File</label>
+                            <label class="form-label">Upload Video File <small class="text-muted">(upload new video to replace current one)</small></label>
                             <input type="file" class="form-control" id="videoFile" accept="video/*" onchange="handleFileSelect(this)">
                             <small class="form-text text-muted">Max 500MB, MP4/WEBM recommended</small>
                             <div id="uploadProgress" class="mt-2" style="display:none;">
@@ -418,7 +429,9 @@ function showAddLessonModal(sectionId) {
     document.getElementById('lessonId').value = '';
     document.getElementById('lessonSectionId').value = sectionId;
     document.getElementById('lessonTitle').value = '';
+    document.getElementById('lessonDescription').value = '';
     document.getElementById('lessonContentType').value = 'video';
+    document.getElementById('lessonContentType').disabled = false;
     document.getElementById('contentTypeGroup').style.display = 'block';
 
     // Reset all content fields
@@ -430,6 +443,7 @@ function showAddLessonModal(sectionId) {
     document.getElementById('lessonDuration').value = '';
     document.getElementById('uploadProgress').style.display = 'none';
     document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('currentVideoDisplay').style.display = 'none';
 
     toggleContentFields();
     new bootstrap.Modal(document.getElementById('lessonModal')).show();
@@ -452,14 +466,22 @@ function editLesson(id, title) {
                 document.getElementById('lessonDuration').value = lesson.duration_minutes || '';
                 document.getElementById('lessonContentType').value = lesson.content_type;
 
-                // Show content type (but as readonly)
+                // Show content type (enable editing)
                 document.getElementById('contentTypeGroup').style.display = 'block';
-                document.getElementById('lessonContentType').disabled = true;
+                document.getElementById('lessonContentType').disabled = false;
 
                 // Load content based on type
                 if (lesson.content_type === 'video') {
                     document.getElementById('videoUrl').value = lesson.video_url || '';
-                    // Note: Can't re-populate file input for security reasons
+
+                    // Display current uploaded video file if exists
+                    if (lesson.video_file_url) {
+                        document.getElementById('currentVideoDisplay').style.display = 'block';
+                        document.getElementById('currentVideoName').textContent = lesson.video_file_name;
+                        document.getElementById('currentVideoLink').href = lesson.video_file_url;
+                    } else {
+                        document.getElementById('currentVideoDisplay').style.display = 'none';
+                    }
                 } else if (lesson.content_type === 'text') {
                     document.getElementById('textContent').value = lesson.text_content || '';
                 } else if (lesson.content_type === 'quiz') {
@@ -532,6 +554,7 @@ function saveLesson() {
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
+        formData.append('content_type', contentType);
 
         // Add content based on type
         if (contentType === 'video') {

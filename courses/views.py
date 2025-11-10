@@ -677,6 +677,8 @@ def lesson_get_ajax(request, course_id, lesson_id):
             'description': lesson.description or '',
             'content_type': lesson.content_type,
             'video_url': lesson.video_url or '',
+            'video_file_url': lesson.video_file.url if lesson.video_file else '',
+            'video_file_name': lesson.video_file.name.split('/')[-1] if lesson.video_file else '',
             'text_content': lesson.text_content or '',
             'duration_minutes': lesson.duration_minutes or 0,
         }
@@ -695,6 +697,15 @@ def lesson_update_ajax(request, course_id, lesson_id):
         # Handle FormData (multipart/form-data)
         lesson.title = request.POST.get('title', lesson.title).strip()
         lesson.description = request.POST.get('description', '').strip()
+
+        # Check if content type is being changed
+        new_content_type = request.POST.get('content_type', lesson.content_type).strip()
+        if new_content_type != lesson.content_type:
+            # Clear old content when changing content type
+            lesson.video_file = None
+            lesson.video_url = ''
+            lesson.text_content = ''
+            lesson.content_type = new_content_type
 
         # Handle content based on type
         if lesson.content_type == 'video':
