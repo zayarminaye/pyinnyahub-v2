@@ -72,7 +72,10 @@
                                             {% endif %}
                                         </div>
                                         <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary btn-sm" onclick="editLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Edit Lesson">
+                                            <a href="{% url 'lesson_content_edit' course.id lesson.id %}" class="btn btn-outline-primary btn-sm" title="Edit Content">
+                                                <i class="bi bi-file-earmark-arrow-up"></i> Content
+                                            </a>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="editLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Edit Title">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <button class="btn btn-outline-danger btn-sm" onclick="deleteLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Delete Lesson">
@@ -178,10 +181,12 @@
 const courseId = {{ course.id }};
 const csrfToken = '{{ csrf_token }}';
 
-// Initialize Sortable for sections
-const sectionsContainer = document.getElementById('sections-container');
-if (sectionsContainer && sectionsContainer.children.length > 0) {
-    new Sortable(sectionsContainer, {
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Sortable for sections
+    const sectionsContainer = document.getElementById('sections-container');
+    if (sectionsContainer && sectionsContainer.children.length > 0) {
+        new Sortable(sectionsContainer, {
         handle: '.section-handle',
         animation: 150,
         onEnd: function(evt) {
@@ -253,6 +258,7 @@ document.querySelectorAll('[class^="sortable-lessons-"]').forEach(container => {
         });
     }
 });
+}); // End DOMContentLoaded
 
 // Section Management Functions
 function showAddSectionModal() {

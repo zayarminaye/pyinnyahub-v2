@@ -23,6 +23,7 @@ urlpatterns = [
     path('instructor/<int:course_id>/edit/', views.course_edit_view, name='course_edit'),
     path('instructor/<int:course_id>/delete/', views.course_delete_view, name='course_delete'),
     path('instructor/<int:course_id>/curriculum/', views.course_curriculum_view, name='course_curriculum'),
+    path('instructor/<int:course_id>/lessons/<int:lesson_id>/content/', views.lesson_content_edit, name='lesson_content_edit'),
 
     # Curriculum Management AJAX
     path('instructor/<int:course_id>/sections/create/', views.section_create_ajax, name='section_create_ajax'),
