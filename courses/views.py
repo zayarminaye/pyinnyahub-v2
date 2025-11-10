@@ -478,10 +478,14 @@ def section_create_ajax(request, course_id):
         description = data.get('description', '').strip()
 
         if not title:
-            return JsonResponse({'success': False, 'error': 'Title is required'}, status=400)
+            return JsonResponse({
+                'success': False,
+                'error': 'Section အမည် ထည့်ရန် လိုအပ်ပါသည။ / Title is required.'
+            }, status=400)
 
-        # Get the next order number
-        max_order = course.sections.aggregate(models.Max('order'))['order__max'] or -1
+        # Get the next order number (explicitly check for None to handle order=0)
+        max_order_result = course.sections.aggregate(models.Max('order'))['order__max']
+        max_order = max_order_result if max_order_result is not None else -1
 
         section = Section.objects.create(
             course=course,
@@ -500,7 +504,13 @@ def section_create_ajax(request, course_id):
             }
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating section: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': 'Section ဖန်တီးရာတွင် အမှားအယွင်း ရှိပါသည်။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။ / Error creating section. Please try again.'
+        }, status=500)
 
 
 @login_required
