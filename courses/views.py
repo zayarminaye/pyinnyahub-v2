@@ -578,14 +578,14 @@ def section_reorder_ajax(request, course_id):
 @instructor_required
 @require_POST
 def lesson_create_ajax(request, course_id, section_id):
-    """Create a new lesson via AJAX."""
+    """Create a new lesson via AJAX with content upload."""
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
     section = get_object_or_404(Section, id=section_id, course=course)
 
     try:
-        data = json.loads(request.body)
-        title = data.get('title', '').strip()
-        content_type = data.get('content_type', 'video')
+        # Handle FormData (multipart/form-data)
+        title = request.POST.get('title', '').strip()
+        content_type = request.POST.get('content_type', 'video')
 
         if not title:
             return JsonResponse({
@@ -597,12 +597,49 @@ def lesson_create_ajax(request, course_id, section_id):
         max_order_result = section.lessons.aggregate(models.Max('order'))['order__max']
         max_order = max_order_result if max_order_result is not None else -1
 
+        # Create lesson
         lesson = Lesson.objects.create(
             section=section,
             title=title,
             content_type=content_type,
             order=max_order + 1
         )
+
+        # Handle content based on type
+        if content_type == 'video':
+            # Handle video file upload
+            if 'video_file' in request.FILES:
+                from core.storage_service import handle_file_upload, upload_lesson_video
+                success, result, url = handle_file_upload(
+                    upload_lesson_video,
+                    request.FILES['video_file'],
+                    lesson_id=lesson.id
+                )
+                if success:
+                    lesson.video_file = result
+                else:
+                    lesson.delete()
+                    return JsonResponse({'success': False, 'error': result}, status=400)
+
+            # Handle video URL
+            video_url = request.POST.get('video_url', '').strip()
+            if video_url:
+                lesson.video_url = video_url
+
+        elif content_type in ['text', 'quiz', 'assignment']:
+            text_content = request.POST.get('text_content', '').strip()
+            if text_content:
+                lesson.text_content = text_content
+
+        # Handle duration
+        duration = request.POST.get('duration_minutes', '').strip()
+        if duration:
+            try:
+                lesson.duration_minutes = int(duration)
+            except ValueError:
+                pass
+
+        lesson.save()
 
         return JsonResponse({
             'success': True,
@@ -736,3 +773,18 @@ def lesson_content_edit(request, course_id, lesson_id):
         'section': lesson.section,
     }
     return render(request, 'instructor/courses/lesson_content_edit.html', context)
+
+
+@login_required
+@instructor_required
+def course_preview(request, course_id):
+    """Preview course as students would see it."""
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    sections = course.sections.prefetch_related('lessons').order_by('order')
+
+    context = {
+        'course': course,
+        'sections': sections,
+        'is_preview': True,
+    }
+    return render(request, 'instructor/courses/preview.html', context)

@@ -12,9 +12,14 @@
                     <h2><i class="bi bi-list-ul"></i> Curriculum Manager</h2>
                     <p class="text-muted mb-0">{{ course.title }}</p>
                 </div>
-                <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Dashboard
-                </a>
+                <div class="btn-group">
+                    <a href="{% url 'course_preview' course.id %}" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-eye"></i> Preview Course
+                    </a>
+                    <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
             </div>
 
             <!-- Info Alert -->
@@ -72,9 +77,6 @@
                                             {% endif %}
                                         </div>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'lesson_content_edit' course.id lesson.id %}" class="btn btn-outline-primary btn-sm" title="Edit Content">
-                                                <i class="bi bi-file-earmark-arrow-up"></i> Content
-                                            </a>
                                             <button class="btn btn-outline-secondary btn-sm" onclick="editLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Edit Title">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
@@ -141,34 +143,97 @@
 
 <!-- Add/Edit Lesson Modal -->
 <div class="modal fade" id="lessonModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="lessonModalTitle">Add New Lesson</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="lessonForm">
+                <form id="lessonForm" enctype="multipart/form-data">
                     <input type="hidden" id="lessonId" value="">
                     <input type="hidden" id="lessonSectionId" value="">
+
                     <div class="mb-3">
                         <label class="form-label">Lesson Title <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="lessonTitle" required>
                     </div>
+
                     <div class="mb-3" id="contentTypeGroup">
                         <label class="form-label">Content Type <span class="text-danger">*</span></label>
-                        <select class="form-select" id="lessonContentType">
+                        <select class="form-select" id="lessonContentType" onchange="toggleContentFields()">
                             <option value="video">Video</option>
                             <option value="text">Text</option>
                             <option value="quiz">Quiz</option>
                             <option value="assignment">Assignment</option>
                         </select>
                     </div>
+
+                    <!-- Video Content Fields -->
+                    <div id="videoContentFields" class="content-fields">
+                        <div class="mb-3">
+                            <label class="form-label">Upload Video File</label>
+                            <input type="file" class="form-control" id="videoFile" accept="video/*" onchange="handleFileSelect(this)">
+                            <small class="form-text text-muted">Max 500MB, MP4/WEBM recommended</small>
+                            <div id="uploadProgress" class="mt-2" style="display:none;">
+                                <div class="progress">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small id="progressText" class="text-muted"></small>
+                            </div>
+                        </div>
+                        <div class="text-center my-2"><strong>OR</strong></div>
+                        <div class="mb-3">
+                            <label class="form-label">Video URL (YouTube/Vimeo)</label>
+                            <input type="url" class="form-control" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
+                            <small class="form-text text-muted">Paste YouTube or Vimeo URL</small>
+                        </div>
+                    </div>
+
+                    <!-- Text Content Fields -->
+                    <div id="textContentFields" class="content-fields" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">Lesson Content</label>
+                            <textarea class="form-control" id="textContent" rows="10" placeholder="Write your lesson content here..."></textarea>
+                            <small class="form-text text-muted">You can use markdown formatting</small>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Content Fields -->
+                    <div id="quizContentFields" class="content-fields" style="display:none;">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Enter quiz questions and instructions
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quiz Questions</label>
+                            <textarea class="form-control" id="quizContent" rows="10" placeholder="Enter quiz questions..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Content Fields -->
+                    <div id="assignmentContentFields" class="content-fields" style="display:none;">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Enter assignment instructions
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assignment Instructions</label>
+                            <textarea class="form-control" id="assignmentContent" rows="10" placeholder="Enter assignment instructions..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Duration (for all types) -->
+                    <div class="mb-3">
+                        <label class="form-label">Duration (minutes)</label>
+                        <input type="number" class="form-control" id="lessonDuration" placeholder="e.g., 15">
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveLesson()">Save Lesson</button>
+                <button type="button" class="btn btn-primary" id="saveLessonBtn" onclick="saveLesson()">
+                    <span id="saveBtnText">Save Lesson</span>
+                    <span id="saveBtnSpinner" class="spinner-border spinner-border-sm ms-2" style="display:none;"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -221,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 // Initialize Sortable for each lessons container
-document.querySelectorAll('[class^="sortable-lessons-"]').forEach(container => {
+document.querySelectorAll('[class*="sortable-lessons-"]').forEach(container => {
     if (container.children.length > 0 && !container.querySelector('.empty-lessons')) {
         const sectionId = container.dataset.sectionId;
         new Sortable(container, {
@@ -350,56 +415,188 @@ function showAddLessonModal(sectionId) {
     document.getElementById('lessonTitle').value = '';
     document.getElementById('lessonContentType').value = 'video';
     document.getElementById('contentTypeGroup').style.display = 'block';
+
+    // Reset all content fields
+    document.getElementById('videoFile').value = '';
+    document.getElementById('videoUrl').value = '';
+    document.getElementById('textContent').value = '';
+    document.getElementById('quizContent').value = '';
+    document.getElementById('assignmentContent').value = '';
+    document.getElementById('lessonDuration').value = '';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('progressBar').style.width = '0%';
+
+    toggleContentFields();
     new bootstrap.Modal(document.getElementById('lessonModal')).show();
 }
 
 function editLesson(id, title) {
-    document.getElementById('lessonModalTitle').textContent = 'Edit Lesson';
+    document.getElementById('lessonModalTitle').textContent = 'Edit Lesson Title';
     document.getElementById('lessonId').value = id;
     document.getElementById('lessonTitle').value = title;
-    document.getElementById('contentTypeGroup').style.display = 'none';  // Don't allow changing content type
+    document.getElementById('contentTypeGroup').style.display = 'none';
+
+    // Hide all content fields for editing (just title)
+    document.querySelectorAll('.content-fields').forEach(el => el.style.display = 'none');
+
     new bootstrap.Modal(document.getElementById('lessonModal')).show();
+}
+
+function toggleContentFields() {
+    const contentType = document.getElementById('lessonContentType').value;
+
+    // Hide all content fields
+    document.querySelectorAll('.content-fields').forEach(el => el.style.display = 'none');
+
+    // Show relevant fields
+    if (contentType === 'video') {
+        document.getElementById('videoContentFields').style.display = 'block';
+    } else if (contentType === 'text') {
+        document.getElementById('textContentFields').style.display = 'block';
+    } else if (contentType === 'quiz') {
+        document.getElementById('quizContentFields').style.display = 'block';
+    } else if (contentType === 'assignment') {
+        document.getElementById('assignmentContentFields').style.display = 'block';
+    }
+}
+
+function handleFileSelect(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+        if (file.size > 500 * 1024 * 1024) { // 500MB limit
+            showToast(`ဖိုင် အရွယ်အစား ကြီးလွန်းပါသည်။ ${sizeMB}MB (အများဆုံး 500MB) / File too large: ${sizeMB}MB (max 500MB)`, 'error');
+            input.value = '';
+            return;
+        }
+
+        showToast(`ဖိုင် ရွေးချယ်ပြီးပါပြီ: ${file.name} (${sizeMB}MB) / File selected: ${file.name} (${sizeMB}MB)`, 'info');
+    }
 }
 
 function saveLesson() {
     const id = document.getElementById('lessonId').value;
     const sectionId = document.getElementById('lessonSectionId').value;
     const title = document.getElementById('lessonTitle').value.trim();
-    const contentType = document.getElementById('lessonContentType').value;
 
     if (!title) {
-        showToast('Lesson title is required', 'error');
+        showToast('Lesson အမည် ထည့်ရန် လိုအပ်ပါသည်။ / Lesson title is required', 'error');
         return;
     }
 
-    const url = id
-        ? `/courses/instructor/${courseId}/lessons/${id}/update/`
-        : `/courses/instructor/${courseId}/sections/${sectionId}/lessons/create/`;
+    // If editing, just update title
+    if (id) {
+        fetch(`/courses/instructor/${courseId}/lessons/${id}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ title })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('lessonModal')).hide();
+                showToast('Lesson title updated successfully', 'success');
+                location.reload();
+            } else {
+                showToast(data.error || 'Failed to update lesson', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error updating lesson', 'error');
+        });
+        return;
+    }
 
-    const payload = id ? { title } : { title, content_type: contentType };
+    // For new lesson, prepare FormData with content
+    const contentType = document.getElementById('lessonContentType').value;
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content_type', contentType);
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('lessonModal')).hide();
-            showToast(`Lesson ${id ? 'updated' : 'created'} successfully`, 'success');
-            location.reload();
-        } else {
-            showToast(data.error || 'Failed to save lesson', 'error');
+    // Add content based on type
+    if (contentType === 'video') {
+        const videoFile = document.getElementById('videoFile').files[0];
+        const videoUrl = document.getElementById('videoUrl').value.trim();
+
+        if (videoFile) {
+            formData.append('video_file', videoFile);
+        } else if (videoUrl) {
+            formData.append('video_url', videoUrl);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error saving lesson', 'error');
+    } else if (contentType === 'text') {
+        const textContent = document.getElementById('textContent').value.trim();
+        if (textContent) formData.append('text_content', textContent);
+    } else if (contentType === 'quiz') {
+        const quizContent = document.getElementById('quizContent').value.trim();
+        if (quizContent) formData.append('text_content', quizContent);
+    } else if (contentType === 'assignment') {
+        const assignmentContent = document.getElementById('assignmentContent').value.trim();
+        if (assignmentContent) formData.append('text_content', assignmentContent);
+    }
+
+    // Add duration
+    const duration = document.getElementById('lessonDuration').value;
+    if (duration) formData.append('duration_minutes', duration);
+
+    // Disable save button
+    const saveBtn = document.getElementById('saveLessonBtn');
+    const saveBtnText = document.getElementById('saveBtnText');
+    const saveBtnSpinner = document.getElementById('saveBtnSpinner');
+    saveBtn.disabled = true;
+    saveBtnSpinner.style.display = 'inline-block';
+    saveBtnText.textContent = 'Saving...';
+
+    // Show progress bar if file upload
+    const videoFile = document.getElementById('videoFile').files[0];
+    if (videoFile) {
+        document.getElementById('uploadProgress').style.display = 'block';
+    }
+
+    const xhr = new XMLHttpRequest();
+
+    // Upload progress
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            document.getElementById('progressBar').style.width = percentComplete + '%';
+            document.getElementById('progressText').textContent = `Uploading: ${Math.round(percentComplete)}%`;
+        }
     });
+
+    xhr.addEventListener('load', function() {
+        saveBtn.disabled = false;
+        saveBtnSpinner.style.display = 'none';
+        saveBtnText.textContent = 'Save Lesson';
+
+        if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('lessonModal')).hide();
+                showToast('Lesson ဖန်တီးပြီးပါပြီ။ / Lesson created successfully', 'success');
+                location.reload();
+            } else {
+                showToast(data.error || 'Failed to create lesson', 'error');
+            }
+        } else {
+            showToast('Error creating lesson', 'error');
+        }
+    });
+
+    xhr.addEventListener('error', function() {
+        saveBtn.disabled = false;
+        saveBtnSpinner.style.display = 'none';
+        saveBtnText.textContent = 'Save Lesson';
+        showToast('Network error occurred', 'error');
+    });
+
+    xhr.open('POST', `/courses/instructor/${courseId}/sections/${sectionId}/lessons/create/`);
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+    xhr.send(formData);
 }
 
 function deleteLesson(id, title) {
