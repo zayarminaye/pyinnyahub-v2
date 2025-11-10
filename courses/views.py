@@ -12,7 +12,6 @@ from .forms import (
     CourseBasicInfoForm, CourseDetailsForm, CourseMediaForm,
     CoursePricingForm, CourseEditForm
 )
-from core.message_helper import show_message
 
 
 def course_list_view(request):
@@ -260,7 +259,7 @@ def course_create_step3(request):
             # Store file data in session
             request.session['course_wizard'].update(wizard_file_data)
             request.session.modified = True
-            show_message(request, 'step_completed', step_number=3, next_step=4)
+            messages.success(request, 'Step 3 ပြီးဆုံးပါပြီ။ Step 4 သို့ ဆက်လက်လုပ်ဆောင်ပါ။')
             return redirect('course_create_step4')
     else:
         form = CourseMediaForm()
@@ -358,11 +357,10 @@ def course_create_step5(request):
             del request.session['course_wizard']
             request.session.modified = True
 
-            # Show success message using SystemMessage
             if status == 'draft':
-                show_message(request, 'course_created_draft', course_title=course.title)
+                messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို Draft အဖြစ် သိမ်းဆည်းပြီးပါပြီ။')
             else:
-                show_message(request, 'course_submitted_review', course_title=course.title)
+                messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို Admin သုံးသပ်ရန် တင်သွင်းပြီးပါပြီ။')
 
             return redirect('instructor_courses')
 
