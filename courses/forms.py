@@ -203,6 +203,13 @@ class CourseEditForm(forms.ModelForm):
         instance = super().save(commit=False)
         instance.what_you_will_learn = self.cleaned_data['what_you_will_learn_text']
         instance.requirements = self.cleaned_data['requirements_text']
+
+        # Ensure file fields are saved properly
+        if 'thumbnail' in self.cleaned_data and self.cleaned_data['thumbnail']:
+            instance.thumbnail = self.cleaned_data['thumbnail']
+        if 'promo_video' in self.cleaned_data and self.cleaned_data['promo_video']:
+            instance.promo_video = self.cleaned_data['promo_video']
+
         if commit:
             instance.save()
         return instance
