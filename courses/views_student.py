@@ -104,23 +104,33 @@ def lesson_get_content_ajax(request, lesson_id):
     """Get lesson content via AJAX for sidebar navigation."""
     lesson = get_object_or_404(Lesson, id=lesson_id)
 
-    # Check enrollment
-    from subscriptions.models import Subscription
-    subscription = Subscription.objects.filter(
-        user=request.user,
-        course=lesson.section.course,
-        is_active=True
-    ).first()
+    # Allow instructors to preview their own courses
+    is_instructor_preview = (request.user.role == 'instructor' and
+                             lesson.section.course.instructor == request.user)
 
-    if not subscription or subscription.is_expired():
-        return JsonResponse({'success': False, 'error': 'Not enrolled'}, status=403)
+    if not is_instructor_preview:
+        # Check enrollment for students
+        from subscriptions.models import Subscription
+        subscription = Subscription.objects.filter(
+            user=request.user,
+            course=lesson.section.course,
+            is_active=True
+        ).first()
 
-    # Get or create progress
-    lesson_progress, created = LessonProgress.objects.get_or_create(
-        user=request.user,
-        lesson=lesson
-    )
-    lesson_progress.record_view()
+        if not subscription or subscription.is_expired():
+            return JsonResponse({'success': False, 'error': 'Not enrolled'}, status=403)
+
+    # Get or create progress (skip for instructor preview)
+    is_completed = False
+    last_position = 0
+    if not is_instructor_preview:
+        lesson_progress, created = LessonProgress.objects.get_or_create(
+            user=request.user,
+            lesson=lesson
+        )
+        lesson_progress.record_view()
+        is_completed = lesson_progress.is_completed
+        last_position = lesson_progress.last_position_seconds
 
     # Prepare content based on type
     content_html = ''
@@ -159,8 +169,8 @@ def lesson_get_content_ajax(request, lesson_id):
             'content_type': lesson.content_type,
             'content_html': content_html,
             'duration_minutes': lesson.duration_minutes or 0,
-            'is_completed': lesson_progress.is_completed,
-            'last_position_seconds': lesson_progress.last_position_seconds,
+            'is_completed': is_completed,
+            'last_position_seconds': last_position,
         }
     })
 
@@ -171,7 +181,14 @@ def mark_lesson_complete_ajax(request, lesson_id):
     """Mark a lesson as complete."""
     lesson = get_object_or_404(Lesson, id=lesson_id)
 
-    # Check enrollment
+    # Allow instructors to preview without saving progress
+    is_instructor_preview = (request.user.role == 'instructor' and
+                             lesson.section.course.instructor == request.user)
+
+    if is_instructor_preview:
+        return JsonResponse({'success': True, 'message': 'Preview mode - not saving progress'})
+
+    # Check enrollment for students
     from subscriptions.models import Subscription
     subscription = Subscription.objects.filter(
         user=request.user,
@@ -221,6 +238,13 @@ def update_video_position_ajax(request, lesson_id):
     import json
 
     lesson = get_object_or_404(Lesson, id=lesson_id)
+
+    # Allow instructors to preview without saving progress
+    is_instructor_preview = (request.user.role == 'instructor' and
+                             lesson.section.course.instructor == request.user)
+
+    if is_instructor_preview:
+        return JsonResponse({'success': True, 'message': 'Preview mode - not saving position'})
 
     try:
         data = json.loads(request.body)
