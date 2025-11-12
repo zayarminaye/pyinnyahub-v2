@@ -81,11 +81,11 @@
                                                 {% endif %}
                                             </div>
                                             <div class="btn-group btn-group-sm">
-                                                {% if lesson.content_type == 'video' and (lesson.video_file or lesson.video_url) %}
+                                                {% if lesson.content_type == 'video' %}{% if lesson.video_file or lesson.video_url %}
                                                 <button class="btn btn-outline-info btn-sm" onclick="togglePreview({{ lesson.id }})" title="Preview Video">
                                                     <i class="bi bi-eye"></i>
                                                 </button>
-                                                {% endif %}
+                                                {% endif %}{% endif %}
                                                 <button class="btn btn-outline-secondary btn-sm" onclick="editLesson({{ lesson.id }}, '{{ lesson.title|escapejs }}')" title="Edit">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
@@ -98,7 +98,7 @@
                                         <p class="text-muted small mb-0 mt-2 ms-4">{{ lesson.description }}</p>
                                         {% endif %}
                                     </div>
-                                    {% if lesson.content_type == 'video' and (lesson.video_file or lesson.video_url) %}
+                                    {% if lesson.content_type == 'video' %}{% if lesson.video_file or lesson.video_url %}
                                     <div id="preview-{{ lesson.id }}" class="lesson-preview p-3 bg-light border-top" style="display:none;">
                                         <div class="ratio ratio-16x9" style="max-width: 600px;">
                                             {% if lesson.video_file %}
@@ -125,7 +125,7 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    {% endif %}
+                                    {% endif %}{% endif %}
                                 </div>
                                 {% endfor %}
                             {% else %}
