@@ -136,7 +136,7 @@
                         {% if progress.is_completed %}
                             <span class="badge bg-success">ပြီးစီးပြီ</span>
                         {% else %}
-                            <a href="{% url 'lesson_detail' progress.lesson.section.course.slug progress.lesson.section.id progress.lesson.id %}" class="btn btn-sm btn-outline-primary">
+                            <a href="{% url 'course_learn_lesson' progress.lesson.section.course.id progress.lesson.id %}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-play"></i> ဆက်ကြည့်မည်
                             </a>
                         {% endif %}
