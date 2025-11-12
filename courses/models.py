@@ -251,13 +251,14 @@ class Course(SoftDeleteModel, PublishableModel):
         return False
 
     def approve(self, admin_user):
-        """Approve the course."""
+        """Approve the course and publish it."""
         from django.utils import timezone
 
         self.status = 'approved'
+        self.is_published = True  # Auto-publish when approved
         self.reviewed_by = admin_user
         self.reviewed_at = timezone.now()
-        self.save(update_fields=['status', 'reviewed_by', 'reviewed_at'])
+        self.save(update_fields=['status', 'is_published', 'reviewed_by', 'reviewed_at'])
 
         # Send notification to instructor
         from notifications.services import NotificationService
