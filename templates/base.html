@@ -104,6 +104,7 @@
             background-color: var(--card-bg);
             border-color: var(--border-color);
             box-shadow: 0 4px 12px var(--shadow-md);
+            z-index: 1050;
         }
 
         .dropdown-item {
@@ -701,6 +702,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 {% if user.role == 'admin' or user.is_superuser %}
                                     <!-- Admin Menu -->
+                                    <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i class="bi bi-speedometer2"></i> Admin Dashboard</a></li>
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear-fill"></i> Django Admin</a></li>
                                     <li><a class="dropdown-item" href="/admin/core/systemsettings/1/change/"><i class="bi bi-sliders"></i> System Settings</a></li>
                                     <li><hr class="dropdown-divider"></li>
