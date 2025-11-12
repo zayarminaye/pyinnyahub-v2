@@ -142,10 +142,12 @@ def home_view(request):
     from courses.models import Course, Category
 
     featured_courses = Course.objects.published().filter(is_featured=True)[:6]
-    categories = Category.objects.filter(is_active=True)[:6]
+    recent_courses = Course.objects.published().order_by('-created_at')[:8]
+    categories = Category.objects.filter(is_active=True)[:8]
 
     context = {
         'featured_courses': featured_courses,
+        'recent_courses': recent_courses,
         'categories': categories,
     }
     return render(request, 'home.html', context)
@@ -398,6 +400,22 @@ def admin_dashboard_view(request):
 # ============================================================================
 
 @login_required
+def admin_payment_detail_view(request, payment_id):
+    """Admin views payment detail with receipt and all information."""
+    if not request.user.is_admin_user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+
+    from payments.models import Payment
+    from django.shortcuts import get_object_or_404
+
+    payment = get_object_or_404(Payment, id=payment_id)
+
+    context = {'payment': payment}
+    return render(request, 'admin/payment_detail.html', context)
+
+
+@login_required
 def admin_approve_payment_view(request, payment_id):
     """Admin approves a payment."""
     if not request.user.is_admin_user:
@@ -412,7 +430,7 @@ def admin_approve_payment_view(request, payment_id):
     if request.method == 'POST':
         try:
             payment.approve(request.user)
-            messages.success(request, f"ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ။ {payment.student.get_full_name()} သည် {payment.course.title} ကို စတင်နိုင်ပါပြီ။")
+            messages.success(request, f"ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ။ {payment.user.get_full_name()} သည် {payment.course.title} ကို စတင်နိုင်ပါပြီ။")
         except Exception as e:
             messages.error(request, f"အမှား: {str(e)}")
 

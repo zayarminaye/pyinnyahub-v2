@@ -23,6 +23,7 @@ urlpatterns = [
     path('apply-instructor/', views.apply_instructor_view, name='apply_instructor'),
 
     # Admin Approval Views (custom dashboard - using /manage/ to avoid conflict with Django admin)
+    path('manage/payment/<int:payment_id>/', views.admin_payment_detail_view, name='admin_payment_detail'),
     path('manage/payment/<int:payment_id>/approve/', views.admin_approve_payment_view, name='admin_approve_payment'),
     path('manage/payment/<int:payment_id>/reject/', views.admin_reject_payment_view, name='admin_reject_payment'),
     path('manage/course/<int:course_id>/approve/', views.admin_approve_course_view, name='admin_approve_course'),

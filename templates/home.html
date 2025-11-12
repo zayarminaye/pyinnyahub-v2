@@ -47,13 +47,14 @@
 </section>
 
 <!-- Featured Courses -->
+{% if featured_courses %}
 <section class="py-5" style="background-color: var(--bg-color);">
     <div class="container">
-        <h2 class="text-center mb-5">အထူးသင်ခန်းစာများ</h2>
+        <h2 class="text-center mb-5">⭐ အထူးသင်ခန်းစာများ</h2>
         <div class="row">
             {% for course in featured_courses %}
                 <div class="col-md-4 mb-4">
-                    <div class="card course-card h-100">
+                    <div class="card course-card h-100 shadow-sm">
                         {% if course.thumbnail %}
                             <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
                         {% else %}
@@ -63,7 +64,7 @@
                             <span class="badge bg-primary mb-2">{{ course.category.name }}</span>
                             <h5 class="card-title">{{ course.title }}</h5>
                             <p class="card-text text-muted">{{ course.short_description|truncatewords:15 }}</p>
-                            <div class="instructor-info">
+                            <div class="instructor-info mb-2">
                                 <i class="bi bi-person-circle"></i>
                                 <span>{{ course.instructor.get_full_name }}</span>
                             </div>
@@ -73,7 +74,7 @@
                                     <span><strong>{{ course.rating_average|floatformat:1 }}</strong></span>
                                     <small class="text-muted">({{ course.rating_count }})</small>
                                 </div>
-                                <span class="price-tag">{{ course.price|floatformat:0 }} ကျပ်</span>
+                                <span class="price-tag"><strong>{{ course.price|floatformat:0 }}</strong> ကျပ်</span>
                             </div>
                         </div>
                         <div class="card-footer bg-transparent">
@@ -81,14 +82,60 @@
                         </div>
                     </div>
                 </div>
-            {% empty %}
-                <div class="col-12 text-center">
-                    <p class="text-muted">အထူးသင်ခန်းစာများ မရှိသေးပါ</p>
-                </div>
             {% endfor %}
         </div>
-        <div class="text-center mt-4">
-            <a href="{% url 'course_list' %}" class="btn btn-outline-primary">သင်ခန်းစာအားလုံးကို ကြည့်မည်</a>
+    </div>
+</section>
+{% endif %}
+
+<!-- All Published Courses -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2>📚 လတ်တလောထုတ်ဝေသော သင်ခန်းစာများ</h2>
+            <a href="{% url 'course_list' %}" class="btn btn-outline-primary">အားလုံးကြည့်မည်</a>
+        </div>
+        <div class="row">
+            {% for course in recent_courses %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card course-card h-100 shadow-sm">
+                        {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <i class="bi bi-book" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body p-3">
+                            <span class="badge bg-secondary mb-2" style="font-size: 0.7rem;">{{ course.category.name }}</span>
+                            <h6 class="card-title mb-2">{{ course.title|truncatewords:8 }}</h6>
+                            <p class="card-text text-muted small">{{ course.short_description|truncatewords:10 }}</p>
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-person"></i> {{ course.instructor.get_full_name|truncatewords:3 }}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="small">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <span>{{ course.rating_average|floatformat:1 }}</span>
+                                </div>
+                                <span class="text-primary"><strong>{{ course.price|floatformat:0 }}</strong> ကျပ်</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 p-3 pt-0">
+                            <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary w-100">ကြည့်မည်</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center">
+                    <p class="text-muted">သင်ခန်းစာများ မရှိသေးပါ</p>
+                    {% if user.is_instructor %}
+                        <a href="{% url 'course_create_step1' %}" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-circle"></i> သင်ခန်းစာ ဖန်တီးမည်
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
         </div>
     </div>
 </section>

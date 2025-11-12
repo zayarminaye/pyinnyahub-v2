@@ -31,11 +31,11 @@ class PaymentAdmin(admin.ModelAdmin):
     )
 
     def user_info(self, obj):
-        """Display user name with link."""
-        user_url = reverse('admin:users_user_change', args=[obj.user.id])
+        """Display user name with link to payment detail."""
+        payment_url = reverse('admin_payment_detail', args=[obj.id])
         return format_html(
-            '<a href="{}" target="_blank">{}</a><br><small>{}</small>',
-            user_url,
+            '<a href="{}">{}</a><br><small>{}</small>',
+            payment_url,
             obj.user.get_full_name(),
             obj.user.email
         )
@@ -82,10 +82,10 @@ class PaymentAdmin(admin.ModelAdmin):
         """Quick approve/reject buttons in list view."""
         if obj.status == 'pending':
             return format_html(
-                '<a class="button" href="{}?action=approve" style="background: #28a745; color: white;">✅ Approve</a> '
-                '<a class="button" href="{}?action=reject" style="background: #dc3545; color: white;">❌ Reject</a>',
-                reverse('admin:payments_payment_change', args=[obj.id]),
-                reverse('admin:payments_payment_change', args=[obj.id])
+                '<a class="button" href="{}" style="background: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">✅ Approve</a> '
+                '<a class="button" href="{}" style="background: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">❌ Reject</a>',
+                reverse('admin_approve_payment', args=[obj.id]),
+                reverse('admin_reject_payment', args=[obj.id])
             )
         elif obj.status == 'approved':
             return format_html('<span style="color: #28a745;">✅ Approved</span>')
@@ -93,6 +93,11 @@ class PaymentAdmin(admin.ModelAdmin):
             return format_html('<span style="color: #dc3545;">❌ Rejected</span>')
         return '-'
     quick_actions.short_description = 'Actions'
+
+    def changelist_view(self, request, extra_context=None):
+        """Redirect to admin dashboard for payments list."""
+        from django.shortcuts import redirect
+        return redirect('admin_dashboard')
 
     def approve_payments(self, request, queryset):
         """Bulk approve selected payments."""

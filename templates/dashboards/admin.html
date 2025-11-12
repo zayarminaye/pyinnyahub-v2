@@ -59,10 +59,10 @@
                                 <td>{{ payment.user.get_full_name }}</td>
                                 <td>{{ payment.course.title|truncatewords:5 }}</td>
                                 <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
-                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.payment_method|default:"N/A" }}</td>
                                 <td>{{ payment.created_at|date:"d/m/Y" }}</td>
                                 <td>
-                                    <a href="{% url 'payment_status' payment.id %}" class="btn btn-sm btn-outline-info" target="_blank">
+                                    <a href="{% url 'admin_payment_detail' payment.id %}" class="btn btn-sm btn-outline-info">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <a href="{% url 'admin_approve_payment' payment.id %}" class="btn btn-sm btn-success">
