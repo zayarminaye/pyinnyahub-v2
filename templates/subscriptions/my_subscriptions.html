@@ -52,15 +52,14 @@
                         {% endif %}
                     </div>
                     <div class="card-footer bg-transparent">
-                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-primary w-100">
+                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary w-100">
                             {% if item.has_started %}
                                 <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
                             {% else %}
                                 <i class="bi bi-play-circle-fill"></i> သင်ခန်းစာ စတင်မည်
                             {% endif %}
                         </a>
-                    </div>
-                </div>
+                    </div>                </div>
             </div>
         {% empty %}
             <div class="col-12">

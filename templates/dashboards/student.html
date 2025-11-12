@@ -90,7 +90,7 @@
                             {% endif %}
                         </div>
                         <div class="card-footer bg-transparent">
-                            <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-primary btn-sm w-100">
+                            <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary btn-sm w-100">
                                 <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
                             </a>
                         </div>
@@ -231,7 +231,7 @@
                                         </small>
                                     </div>
                                     <div class="card-footer bg-transparent">
-                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn
+                                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn
                                             {% if item.course_status == 'completed' %}btn-success
                                             {% elif item.course_status == 'in_progress' %}btn-primary
                                             {% else %}btn-outline-primary
@@ -282,7 +282,7 @@
                                         <small class="text-muted d-block">{{ item.completed_lessons }}/{{ item.total_lessons }} သင်ခန်းပြီး</small>
                                     </div>
                                     <div class="card-footer bg-transparent">
-                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-primary btn-sm w-100">
+                                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary btn-sm w-100">
                                             <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
                                         </a>
                                     </div>
@@ -320,7 +320,7 @@
                                         <small class="text-muted d-block">{{ item.total_lessons }} သင်ခန်းစာ အားလုံးပြီး</small>
                                     </div>
                                     <div class="card-footer bg-transparent">
-                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-success btn-sm w-100">
+                                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-success btn-sm w-100">
                                             <i class="bi bi-arrow-clockwise"></i> ပြန်ကြည့်မည်
                                         </a>
                                     </div>
@@ -352,7 +352,7 @@
                                         <small class="text-muted d-block">{{ item.total_lessons }} သင်ခန်းစာ</small>
                                     </div>
                                     <div class="card-footer bg-transparent">
-                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-outline-primary btn-sm w-100">
+                                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-outline-primary btn-sm w-100">
                                             <i class="bi bi-play-circle"></i> စတင်မည်
                                         </a>
                                     </div>
@@ -381,7 +381,7 @@
 
     <!-- Quick Actions -->
     <div class="mt-4">
-        <a href="{% url 'my_subscriptions' %}" class="btn btn-outline-primary">
+        <a href="{% url 'my_courses' %}" class="btn btn-outline-primary">
             <i class="bi bi-book"></i> သင်ခန်းစာ စာရင်းအပြည့်အစုံ
         </a>
         <a href="{% url 'my_payments' %}" class="btn btn-outline-info">

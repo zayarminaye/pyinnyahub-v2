@@ -108,7 +108,7 @@ def subscription_detail_view(request, subscription_id):
     )
 
     course = subscription.course
-    sections = course.sections.filter(is_published=True).prefetch_related('lessons')
+    sections = course.sections.all().prefetch_related('lessons')
 
     context = {
         'subscription': subscription,
