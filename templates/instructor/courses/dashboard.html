@@ -167,11 +167,26 @@
                             <td>{{ course.created_at|date:"d/m/Y" }}</td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
+                                    {% if course.status == 'draft' %}
+                                    <button type="button"
+                                            class="btn btn-success"
+                                            title="Submit for Review"
+                                            onclick="submitForReview({{ course.id }}, '{{ course.title }}')">
+                                        <i class="bi bi-send"></i>
+                                    </button>
+                                    {% endif %}
                                     {% if course.slug %}
                                     <a href="{% url 'course_detail' course.slug %}"
                                        class="btn btn-outline-primary"
                                        title="ကြည့်မည်">
                                         <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if course.status == 'approved' %}
+                                    <a href="{% url 'course_preview' course.id %}"
+                                       class="btn btn-outline-success"
+                                       title="Preview">
+                                        <i class="bi bi-play-circle"></i>
                                     </a>
                                     {% endif %}
                                     <a href="{% url 'course_edit' course.id %}"
@@ -184,6 +199,13 @@
                                        title="Curriculum">
                                         <i class="bi bi-list-ul"></i>
                                     </a>
+                                    {% if course.status == 'approved' %}
+                                    <a href="{% url 'course_students' course.id %}"
+                                       class="btn btn-outline-primary"
+                                       title="Students">
+                                        <i class="bi bi-people"></i>
+                                    </a>
+                                    {% endif %}
                                     {% if course.status in 'draft,rejected' %}
                                     <button type="button"
                                             class="btn btn-outline-danger"
@@ -262,6 +284,12 @@
 </form>
 
 <script>
+function submitForReview(courseId, courseTitle) {
+    if (confirm(`သင်ခန်းစာ "${courseTitle}" ကို Admin သုံးသပ်ရန် တင်သွင်းမှာ သေချာပါသလား?\n\nတင်သွင်းပြီးပါက Admin မှ သုံးသပ်ပြီး အတည်ပြုမှသာ ထုတ်ဝေနိုင်မည်ဖြစ်ပါသည်။`)) {
+        window.location.href = `/courses/instructor/${courseId}/submit/`;
+    }
+}
+
 function confirmDelete(courseId, courseTitle) {
     if (confirm(`သင်ခန်းစာ "${courseTitle}" ကို ဖျက်မှာ သေချာပါသလား?\n\nဤလုပ်ဆောင်မှုကို ပြန်ပြောင်း၍ မရနိုင်ပါ။`)) {
         const form = document.getElementById('deleteForm');
