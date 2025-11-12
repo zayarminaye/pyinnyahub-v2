@@ -38,15 +38,21 @@ def validate_file_size(file, max_size_mb=None):
     Raises:
         ValidationError: If file exceeds maximum size
     """
+    # Skip validation if no file provided
+    if not file:
+        return
+
     if max_size_mb is None:
         max_size_mb = 10  # 10MB default
 
     max_size_bytes = max_size_mb * 1024 * 1024
 
-    if file.size > max_size_bytes:
-        raise ValidationError(
-            f'File size exceeds maximum allowed size of {max_size_mb}MB. Your file is {file.size / (1024*1024):.1f}MB.'
-        )
+    # Check if file has size attribute and it's not None
+    if hasattr(file, 'size') and file.size is not None:
+        if file.size > max_size_bytes:
+            raise ValidationError(
+                f'File size exceeds maximum allowed size of {max_size_mb}MB. Your file is {file.size / (1024*1024):.1f}MB.'
+            )
 
 
 def validate_file_type(file, allowed_types):
