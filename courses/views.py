@@ -839,19 +839,34 @@ def lesson_reorder_ajax(request, course_id, section_id):
     section = get_object_or_404(Section, id=section_id, course=course)
 
     try:
+        # Parse JSON data
         data = json.loads(request.body)
         lesson_ids = data.get('lesson_ids', [])
+
+        if not lesson_ids:
+            return JsonResponse({'success': False, 'error': 'No lesson IDs provided'}, status=400)
+
+        # Validate all lessons belong to this section
+        existing_lessons = set(section.lessons.values_list('id', flat=True))
+        for lesson_id in lesson_ids:
+            if int(lesson_id) not in existing_lessons:
+                return JsonResponse({'success': False, 'error': f'Invalid lesson ID: {lesson_id}'}, status=400)
 
         # Update order for each lesson
         for index, lesson_id in enumerate(lesson_ids):
             Lesson.objects.filter(id=lesson_id, section=section).update(order=index)
 
         return JsonResponse({'success': True})
+    except json.JSONDecodeError as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"JSON decode error in lesson reorder: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error reordering lessons: {str(e)}", exc_info=True)
-        return JsonResponse({'success': False, 'error': 'Lesson reorder မအောင်မြင်ပါ။ / Failed to reorder lessons.'}, status=500)
+        return JsonResponse({'success': False, 'error': f'Lesson reorder မအောင်မြင်ပါ။ / Failed to reorder lessons. Error: {str(e)}'}, status=500)
 
 
 @login_required
@@ -912,13 +927,9 @@ def lesson_content_edit(request, course_id, lesson_id):
 @login_required
 @instructor_required
 def course_preview(request, course_id):
-    """Preview course as students would see it."""
+    """Preview course as students would see it - redirects to learning interface."""
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
-    sections = course.sections.prefetch_related('lessons').order_by('order')
 
-    context = {
-        'course': course,
-        'sections': sections,
-        'is_preview': True,
-    }
-    return render(request, 'instructor/courses/preview.html', context)
+    # Redirect to the actual student learning interface
+    # The learning view will handle the preview mode
+    return redirect('course_learn', course_id=course.id)
