@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load course_tags %}
+
+{% block title %}{{ course.title }} - Learning{% endblock %}
+
+{% block extra_css %}
+<style>
+    .learning-container {
+        display: flex;
+        height: calc(100vh - 56px);
+        overflow: hidden;
+    }
+
+    .lesson-sidebar {
+        width: 350px;
+        background: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .lesson-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem;
+    }
+
+    .progress-header {
+        padding: 1.5rem;
+        background: white;
+        border-bottom: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .section-header {
+        padding: 1rem 1.5rem;
+        background: #e9ecef;
+        font-weight: 600;
+        border-bottom: 1px solid #dee2e6;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .lesson-item {
+        padding: 0.75rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .lesson-item:hover {
+        background: white;
+    }
+
+    .lesson-item.active {
+        background: #e7f3ff;
+        border-left: 3px solid #0d6efd;
+    }
+
+    .lesson-item.completed {
+        opacity: 0.8;
+    }
+
+    .lesson-check {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #dee2e6;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .lesson-check.completed {
+        background: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+
+    .lesson-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .lesson-title {
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .lesson-duration {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .content-area {
+        max-width: 1000px;
+    }
+
+    .lesson-video-container {
+        margin-bottom: 2rem;
+    }
+
+    .lesson-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .complete-btn {
+        position: sticky;
+        bottom: 2rem;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .learning-container {
+            flex-direction: column;
+        }
+        .lesson-sidebar {
+            width: 100%;
+            height: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="learning-container">
+    <!-- Left Sidebar -->
+    <div class="lesson-sidebar">
+        <!-- Progress Header -->
+        <div class="progress-header">
+            <h6 class="mb-2">{{ course.title }}</h6>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-success"
+                     role="progressbar"
+                     style="width: {{ progress_percentage }}%"
+                     id="courseProgressBar">
+                </div>
+            </div>
+            <small class="text-muted mt-1 d-block" id="progressText">
+                {{ completed_lessons }} of {{ total_lessons }} lessons completed ({{ progress_percentage }}%)
+            </small>
+        </div>
+
+        <!-- Lesson List -->
+        {% for section in sections %}
+        <div class="section-group">
+            <div class="section-header" onclick="toggleSection({{ section.id }})">
+                <span>{{ section.title }}</span>
+                <i class="bi bi-chevron-down" id="section-icon-{{ section.id }}"></i>
+            </div>
+            <div class="section-lessons" id="section-{{ section.id }}">
+                {% for lesson in section.lessons.all %}
+                <div class="lesson-item {% if current_lesson and lesson.id == current_lesson.id %}active{% endif %} {% if lesson.id in progress_dict and progress_dict|get_item:lesson.id|attr:'is_completed' %}completed{% endif %}"
+                     data-lesson-id="{{ lesson.id }}"
+                     onclick="loadLesson({{ lesson.id }})">
+                    <div class="lesson-check {% if lesson.id in progress_dict and progress_dict|get_item:lesson.id|attr:'is_completed' %}completed{% endif %}"
+                         id="check-{{ lesson.id }}">
+                        {% if lesson.id in progress_dict and progress_dict|get_item:lesson.id|attr:'is_completed' %}
+                        <i class="bi bi-check"></i>
+                        {% endif %}
+                    </div>
+                    <div class="lesson-info">
+                        <p class="lesson-title">{{ lesson.title }}</p>
+                        {% if lesson.duration_minutes %}
+                        <p class="lesson-duration">
+                            <i class="bi bi-clock"></i> {{ lesson.duration_minutes }} min
+                        </p>
+                        {% endif %}
+                    </div>
+                    <i class="bi bi-{{ lesson.content_type }} text-muted"></i>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted p-3">
+                    <small>No lessons in this section</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Right Content Area -->
+    <div class="lesson-content">
+        {% if current_lesson %}
+        <div class="content-area">
+            <!-- Lesson Header -->
+            <div class="lesson-header">
+                <h2 id="lessonTitle">{{ current_lesson.title }}</h2>
+                {% if current_lesson.description %}
+                <p class="text-muted" id="lessonDescription">{{ current_lesson.description }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Lesson Content -->
+            <div class="lesson-video-container" id="lessonContentArea">
+                {% if current_lesson.content_type == 'video' %}
+                    {% if current_lesson.video_file %}
+                    <video controls class="w-100" style="max-height: 500px;" id="lessonVideo">
+                        <source src="{{ current_lesson.video_file.url }}" type="video/mp4">
+                        Your browser does not support video playback.
+                    </video>
+                    {% elif current_lesson.video_url %}
+                    <div class="ratio ratio-16x9">
+                        {% if 'youtube.com' in current_lesson.video_url or 'youtu.be' in current_lesson.video_url %}
+                            {% if 'youtube.com/watch?v=' in current_lesson.video_url %}
+                                {% with video_id=current_lesson.video_url|cut:'https://www.youtube.com/watch?v='|cut:'https://youtube.com/watch?v=' %}
+                                <iframe src="https://www.youtube.com/embed/{{ video_id|slice:':11' }}?rel=0&modestbranding=1" allowfullscreen></iframe>
+                                {% endwith %}
+                            {% elif 'youtu.be/' in current_lesson.video_url %}
+                                {% with video_id=current_lesson.video_url|cut:'https://youtu.be/'|cut:'https://www.youtu.be/' %}
+                                <iframe src="https://www.youtube.com/embed/{{ video_id|slice:':11' }}?rel=0&modestbranding=1" allowfullscreen></iframe>
+                                {% endwith %}
+                            {% else %}
+                                <iframe src="{{ current_lesson.video_url }}" allowfullscreen></iframe>
+                            {% endif %}
+                        {% else %}
+                            <iframe src="{{ current_lesson.video_url }}" allowfullscreen></iframe>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% else %}
+                <div class="card">
+                    <div class="card-body">
+                        {{ current_lesson.text_content|safe }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Mark Complete Button -->
+            <div class="text-center mt-4">
+                <button class="btn btn-success btn-lg complete-btn"
+                        id="completeBtn"
+                        onclick="markComplete({{ current_lesson.id }})"
+                        {% if current_lesson.id in progress_dict and progress_dict|get_item:current_lesson.id|attr:'is_completed' %}disabled{% endif %}>
+                    <i class="bi bi-check-circle"></i>
+                    {% if current_lesson.id in progress_dict and progress_dict|get_item:current_lesson.id|attr:'is_completed' %}
+                    Completed
+                    {% else %}
+                    Mark as Complete
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-book display-1 text-muted"></i>
+            <p class="text-muted mt-3">Select a lesson to start learning</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const courseId = {{ course.id }};
+let currentLessonId = {% if current_lesson %}{{ current_lesson.id }}{% else %}null{% endif %};
+
+// CSRF Token
+const csrfToken = '{{ csrf_token }}';
+
+// Toggle section collapse
+function toggleSection(sectionId) {
+    const section = document.getElementById('section-' + sectionId);
+    const icon = document.getElementById('section-icon-' + sectionId);
+
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        icon.classList.remove('bi-chevron-right');
+        icon.classList.add('bi-chevron-down');
+    } else {
+        section.style.display = 'none';
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-right');
+    }
+}
+
+// Load lesson via AJAX
+function loadLesson(lessonId) {
+    // Update active state
+    document.querySelectorAll('.lesson-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelector(`[data-lesson-id="${lessonId}"]`).classList.add('active');
+
+    // Save video position if current lesson is video
+    if (currentLessonId) {
+        const video = document.getElementById('lessonVideo');
+        if (video && !video.paused) {
+            saveVideoPosition(currentLessonId, Math.floor(video.currentTime));
+        }
+    }
+
+    // Fetch lesson content
+    fetch(`/courses/lessons/${lessonId}/content/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const lesson = data.lesson;
+
+                // Update content
+                document.getElementById('lessonTitle').textContent = lesson.title;
+                document.getElementById('lessonDescription').textContent = lesson.description || '';
+                document.getElementById('lessonContentArea').innerHTML = lesson.content_html;
+
+                // Update complete button
+                const completeBtn = document.getElementById('completeBtn');
+                if (lesson.is_completed) {
+                    completeBtn.disabled = true;
+                    completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Completed';
+                } else {
+                    completeBtn.disabled = false;
+                    completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Mark as Complete';
+                }
+                completeBtn.setAttribute('onclick', `markComplete(${lessonId})`);
+
+                // Resume video position
+                if (lesson.content_type === 'video' && lesson.last_position_seconds > 0) {
+                    setTimeout(() => {
+                        const video = document.getElementById('lessonVideo');
+                        if (video) {
+                            video.currentTime = lesson.last_position_seconds;
+                        }
+                    }, 500);
+                }
+
+                currentLessonId = lessonId;
+
+                // Update URL without reload
+                window.history.pushState({}, '', `/courses/learn/${courseId}/${lessonId}/`);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading lesson:', error);
+            alert('Failed to load lesson');
+        });
+}
+
+// Mark lesson as complete
+function markComplete(lessonId) {
+    fetch(`/courses/lessons/${lessonId}/complete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button
+            const completeBtn = document.getElementById('completeBtn');
+            completeBtn.disabled = true;
+            completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Completed';
+
+            // Update sidebar check
+            const check = document.getElementById('check-' + lessonId);
+            check.classList.add('completed');
+            check.innerHTML = '<i class="bi bi-check"></i>';
+
+            // Update lesson item
+            document.querySelector(`[data-lesson-id="${lessonId}"]`).classList.add('completed');
+
+            // Update progress bar
+            document.getElementById('courseProgressBar').style.width = data.progress_percentage + '%';
+            document.getElementById('progressText').textContent =
+                `${data.completed_lessons} of ${data.total_lessons} lessons completed (${data.progress_percentage}%)`;
+
+            // Show success message
+            showToast('Lesson မှတ်သားပြီးပါပြီ! / Lesson marked as complete!', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error marking complete:', error);
+        showToast('Error marking lesson complete', 'error');
+    });
+}
+
+// Save video position
+function saveVideoPosition(lessonId, positionSeconds) {
+    fetch(`/courses/lessons/${lessonId}/position/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({position_seconds: positionSeconds})
+    });
+}
+
+// Auto-save video position every 5 seconds
+setInterval(() => {
+    if (currentLessonId) {
+        const video = document.getElementById('lessonVideo');
+        if (video && !video.paused && video.currentTime > 0) {
+            saveVideoPosition(currentLessonId, Math.floor(video.currentTime));
+        }
+    }
+}, 5000);
+
+// Toast notification
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    toast.style.minWidth = '300px';
+    toast.style.maxWidth = '500px';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.position = 'fixed';
+    container.style.top = '20px';
+    container.style.right = '20px';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+</script>
+{% endblock %}

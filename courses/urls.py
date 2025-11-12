@@ -3,11 +3,19 @@ URLs for Courses app.
 """
 from django.urls import path
 from . import views
+from . import views_student
 
 urlpatterns = [
     # Public course browsing
     path('', views.course_list_view, name='course_list'),
     path('<slug:slug>/', views.course_detail_view, name='course_detail'),
+
+    # Student learning interface
+    path('learn/<int:course_id>/', views_student.course_learn_view, name='course_learn'),
+    path('learn/<int:course_id>/<int:lesson_id>/', views_student.course_learn_view, name='course_learn_lesson'),
+    path('lessons/<int:lesson_id>/content/', views_student.lesson_get_content_ajax, name='lesson_content_ajax'),
+    path('lessons/<int:lesson_id>/complete/', views_student.mark_lesson_complete_ajax, name='mark_lesson_complete'),
+    path('lessons/<int:lesson_id>/position/', views_student.update_video_position_ajax, name='update_video_position'),
 
     # Instructor portal - Dashboard
     path('instructor/my-courses/', views.instructor_course_dashboard, name='instructor_courses'),

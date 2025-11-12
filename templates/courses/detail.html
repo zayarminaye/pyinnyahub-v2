@@ -90,8 +90,11 @@
 
                     {% if user.is_authenticated %}
                         {% if is_enrolled %}
-                            <a href="{% url 'subscription_detail' active_subscription.id %}" class="btn btn-success w-100 mb-2">
-                                <i class="bi bi-play-circle"></i> သင်ခန်းစာ ဆက်လက်လေ့လာမည်
+                            <a href="{% url 'course_learn' course.id %}" class="btn btn-success w-100 mb-2">
+                                <i class="bi bi-play-circle-fill"></i> သင်ခန်းစာ ဆက်လက်လေ့လာမည်
+                            </a>
+                            <a href="{% url 'subscription_detail' active_subscription.id %}" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="bi bi-info-circle"></i> Subscription Details
                             </a>
                         {% else %}
                             <a href="{% url 'enroll_course' course.slug %}" class="btn btn-primary w-100 mb-2">
