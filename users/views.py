@@ -320,7 +320,6 @@ def student_dashboard_view(request):
     from subscriptions.models import Subscription
     from courses.models import LessonProgress, Course, Lesson
     from django.db.models import Count, Q, Sum
-    from django.utils import timezone as tz
 
     # Get all active subscriptions
     active_subscriptions = Subscription.objects.filter(
@@ -387,7 +386,7 @@ def student_dashboard_view(request):
 
     # Sort by last activity
     subscriptions_with_progress.sort(
-        key=lambda x: x['last_progress'].last_viewed_at if x['last_progress'] else tz.now() - tz.timedelta(days=365),
+        key=lambda x: x['last_progress'].last_viewed_at if x['last_progress'] else timezone.now() - timezone.timedelta(days=365),
         reverse=True
     )
 

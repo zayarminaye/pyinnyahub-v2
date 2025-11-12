@@ -336,10 +336,10 @@ function loadLesson(lessonId) {
                 const completeBtn = document.getElementById('completeBtn');
                 if (lesson.is_completed) {
                     completeBtn.disabled = true;
-                    completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Completed';
+                    completeBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>ပြီးပြီ';
                 } else {
                     completeBtn.disabled = false;
-                    completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Mark as Complete';
+                    completeBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>ပြီးပြီဟု မှတ်မည်';
                 }
                 completeBtn.setAttribute('onclick', `markComplete(${lessonId})`);
 
@@ -380,7 +380,7 @@ function markComplete(lessonId) {
             // Update button
             const completeBtn = document.getElementById('completeBtn');
             completeBtn.disabled = true;
-            completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Completed';
+            completeBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>ပြီးပြီ';
 
             // Update sidebar check
             const check = document.getElementById('check-' + lessonId);
