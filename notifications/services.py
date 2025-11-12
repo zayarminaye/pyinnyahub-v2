@@ -82,10 +82,19 @@ class NotificationService:
             user=user,
             status='pending'
         )
+        email_log_id = email_log.id  # Store ID to refetch in thread
 
         def send_in_background():
             """Send email in background thread."""
+            from django.db import connection
+
+            # Close old database connection and get fresh one
+            connection.close()
+
             try:
+                # Refetch the email log in this thread with fresh connection
+                email_log = EmailLog.objects.get(id=email_log_id)
+
                 send_mail(
                     subject=subject,
                     message=message,
@@ -96,8 +105,15 @@ class NotificationService:
                 email_log.mark_as_sent()
                 logger.info(f"Email sent to {recipient}: {subject}")
             except Exception as e:
-                email_log.mark_as_failed(str(e))
+                try:
+                    email_log = EmailLog.objects.get(id=email_log_id)
+                    email_log.mark_as_failed(str(e))
+                except Exception:
+                    pass  # If even refetch fails, just log it
                 logger.error(f"Failed to send email to {recipient}: {str(e)}")
+            finally:
+                # Close connection when thread finishes
+                connection.close()
 
         # Start background thread for email sending
         thread = threading.Thread(target=send_in_background, daemon=True)
