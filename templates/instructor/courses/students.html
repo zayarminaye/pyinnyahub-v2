@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Students - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-people"></i> Students Enrolled</h2>
+            <p class="text-muted">{{ course.title }}</p>
+        </div>
+        <a href="{% url 'instructor_courses' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Courses
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Active Subscriptions</small>
+                            <h3 class="mb-0">{{ subscriptions|length }}</h3>
+                        </div>
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Pending Payments</small>
+                            <h3 class="mb-0">{{ payments|length }}</h3>
+                        </div>
+                        <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Total Enrollment</small>
+                            <h3 class="mb-0">{{ course.enrollment_count }}</h3>
+                        </div>
+                        <i class="bi bi-graph-up text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="studentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions" type="button">
+                Active Students
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button">
+                Payment History
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="studentTabsContent">
+        <!-- Active Students Tab -->
+        <div class="tab-pane fade show active" id="subscriptions" role="tabpanel">
+            {% if subscriptions %}
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Email</th>
+                                    <th>Access Type</th>
+                                    <th>Started</th>
+                                    <th>Expires</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subscription in subscriptions %}
+                                <tr>
+                                    <td>{{ subscription.user.get_full_name }}</td>
+                                    <td>{{ subscription.user.email }}</td>
+                                    <td><span class="badge bg-info">{{ subscription.get_access_type_display }}</span></td>
+                                    <td>{{ subscription.starts_at|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if subscription.expires_at %}
+                                            {{ subscription.expires_at|date:"d/m/Y" }}
+                                        {% else %}
+                                            <span class="badge bg-success">Lifetime</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if subscription.is_active and not subscription.is_expired %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Expired</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <p class="text-muted mt-3">No active students yet</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Payment History Tab -->
+        <div class="tab-pane fade" id="payments" role="tabpanel">
+            {% if payments %}
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Transaction ID</th>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ payment.user.get_full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ payment.user.email }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ payment.amount|floatformat:0 }} MMK</td>
+                                    <td>{{ payment.payment_method|default:"-" }}</td>
+                                    <td><code>{{ payment.transaction_id|default:"-" }}</code></td>
+                                    <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if payment.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif payment.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif payment.status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.receipt %}
+                                        <a href="{{ payment.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-file-earmark-image"></i> View
+                                        </a>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-receipt display-1 text-muted"></i>
+                <p class="text-muted mt-3">No payment history yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <i class="bi bi-info-circle"></i>
+        <strong>Note:</strong> Instructors can view enrollment information but cannot approve or reject payments. Only admin can approve payments.
+    </div>
+</div>
+{% endblock %}

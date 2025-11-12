@@ -30,6 +30,8 @@ urlpatterns = [
     # Instructor portal - Course Management
     path('instructor/<int:course_id>/edit/', views.course_edit_view, name='course_edit'),
     path('instructor/<int:course_id>/delete/', views.course_delete_view, name='course_delete'),
+    path('instructor/<int:course_id>/submit/', views.course_submit_for_review, name='course_submit_review'),
+    path('instructor/<int:course_id>/students/', views.course_students_view, name='course_students'),
     path('instructor/<int:course_id>/curriculum/', views.course_curriculum_view, name='course_curriculum'),
     path('instructor/<int:course_id>/preview/', views.course_preview, name='course_preview'),
     path('instructor/<int:course_id>/lessons/<int:lesson_id>/content/', views.lesson_content_edit, name='lesson_content_edit'),

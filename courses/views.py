@@ -448,6 +448,62 @@ def course_delete_view(request, course_id):
 @login_required
 @instructor_required
 @owns_course
+def course_submit_for_review(request, course_id):
+    """Submit course for admin review."""
+    course = get_object_or_404(Course, id=course_id)
+
+    # Only allow submission for draft or rejected courses
+    if course.status not in ['draft', 'rejected']:
+        messages.warning(request, 'ဤသင်ခန်းစာကို ထပ်မံတင်သွင်း၍ မရနိုင်ပါ။')
+        return redirect('instructor_courses')
+
+    # Validate course has minimum content
+    if not course.sections.exists():
+        messages.error(request, 'သင်ခန်းစာတွင် အနည်းဆုံး အပိုင်း ၁ ပိုင်း ရှိရမည်။')
+        return redirect('course_curriculum', course_id=course.id)
+
+    total_lessons = sum(section.lessons.count() for section in course.sections.all())
+    if total_lessons == 0:
+        messages.error(request, 'သင်ခန်းစာတွင် အနည်းဆုံး သင်ခန်းစာ ၁ ခု ရှိရမည်။')
+        return redirect('course_curriculum', course_id=course.id)
+
+    # Submit for review
+    course.submit_for_review()
+    messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို Admin သုံးသပ်ရန် အောင်မြင်စွာ တင်သွင်းပြီးပါပြီ။')
+    return redirect('instructor_courses')
+
+
+@login_required
+@instructor_required
+@owns_course
+def course_students_view(request, course_id):
+    """View students enrolled in the course."""
+    course = get_object_or_404(Course, id=course_id)
+
+    # Get all subscriptions for this course
+    from subscriptions.models import Subscription
+    from payments.models import Payment
+
+    subscriptions = Subscription.objects.filter(
+        course=course
+    ).select_related('user', 'payment').order_by('-created_at')
+
+    # Get payment information
+    payments = Payment.objects.filter(
+        course=course
+    ).select_related('user', 'reviewed_by').order_by('-created_at')
+
+    context = {
+        'course': course,
+        'subscriptions': subscriptions,
+        'payments': payments,
+    }
+    return render(request, 'instructor/courses/students.html', context)
+
+
+@login_required
+@instructor_required
+@owns_course
 def course_curriculum_view(request, course_id):
     """Manage course curriculum."""
     course = get_object_or_404(Course, id=course_id)
