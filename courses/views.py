@@ -622,11 +622,11 @@ def section_reorder_ajax(request, course_id):
         data = json.loads(request.body)
         section_ids = data.get('section_ids', [])
 
-        # Use atomic transaction and temporary negative values to avoid unique constraint violations
+        # Use atomic transaction with high temporary values to avoid unique constraint violations
         with transaction.atomic():
-            # First, set all sections to negative orders
-            for section in Section.objects.filter(id__in=section_ids, course=course):
-                section.order = -section.id
+            # First, set all sections to very high temporary orders (10000+)
+            for idx, section in enumerate(Section.objects.filter(id__in=section_ids, course=course)):
+                section.order = 10000 + idx
                 section.save()
 
             # Then update to final order
@@ -864,11 +864,11 @@ def lesson_reorder_ajax(request, course_id, section_id):
             if int(lesson_id) not in existing_lessons:
                 return JsonResponse({'success': False, 'error': f'Invalid lesson ID: {lesson_id}'}, status=400)
 
-        # Use atomic transaction and temporary negative values to avoid unique constraint violations
+        # Use atomic transaction with high temporary values to avoid unique constraint violations
         with transaction.atomic():
-            # First, set all lessons to negative orders
-            for lesson in Lesson.objects.filter(id__in=lesson_ids, section=section):
-                lesson.order = -lesson.id
+            # First, set all lessons to very high temporary orders (10000+)
+            for idx, lesson in enumerate(Lesson.objects.filter(id__in=lesson_ids, section=section)):
+                lesson.order = 10000 + idx
                 lesson.save()
 
             # Then update to final order
