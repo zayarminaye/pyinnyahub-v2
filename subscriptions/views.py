@@ -12,8 +12,8 @@ from payments.models import Payment
 
 
 @login_required
-def my_subscriptions_view(request):
-    """Display user's active and expired subscriptions with progress tracking."""
+def my_courses_view(request):
+    """Display user's active and expired courses with progress tracking."""
     from courses.models import LessonProgress, Lesson
 
     active_subscriptions = Subscription.objects.filter(
@@ -63,7 +63,7 @@ def my_subscriptions_view(request):
         'subscriptions_with_progress': subscriptions_with_progress,
         'expired_subscriptions': expired_subscriptions,
     }
-    return render(request, 'subscriptions/my_subscriptions.html', context)
+    return render(request, 'subscriptions/my_courses.html', context)
 
 
 @login_required
