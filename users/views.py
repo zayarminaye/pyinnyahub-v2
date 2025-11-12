@@ -467,15 +467,26 @@ def admin_dashboard_view(request):
     from courses.models import Course
     from payments.models import Payment
 
-    pending_payments = Payment.objects.filter(status='pending').select_related('user', 'course')
+    # Get all payments with filters
+    all_payments = Payment.objects.select_related('user', 'course').order_by('-created_at')
+    pending_payments = all_payments.filter(status='pending')
+    approved_payments = all_payments.filter(status='approved')
+    rejected_payments = all_payments.filter(status='rejected')
+
     pending_courses = Course.objects.filter(status='pending').select_related('instructor')
     pending_applications = InstructorApplication.objects.filter(status='pending').select_related('user')
 
     context = {
         'pending_payments_count': pending_payments.count(),
+        'approved_payments_count': approved_payments.count(),
+        'rejected_payments_count': rejected_payments.count(),
+        'all_payments_count': all_payments.count(),
         'pending_courses_count': pending_courses.count(),
         'pending_applications_count': pending_applications.count(),
-        'pending_payments': pending_payments[:10],
+        'pending_payments': pending_payments[:20],
+        'approved_payments': approved_payments[:20],
+        'rejected_payments': rejected_payments[:20],
+        'all_payments': all_payments[:20],
         'pending_courses': pending_courses[:10],
         'pending_applications': pending_applications[:10],
     }

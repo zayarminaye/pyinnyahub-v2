@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load payment_filters %}
 
 {% block title %}Approve Payment{% endblock %}
 
@@ -14,7 +15,7 @@
                     <p><strong>ကျောင်းသား:</strong> {{ payment.user.get_full_name }}</p>
                     <p><strong>သင်ခန်းစာ:</strong> {{ payment.course.title }}</p>
                     <p><strong>ငွေပမာဏ:</strong> {{ payment.amount }} ကျပ်</p>
-                    <p><strong>နည်းလမ်း:</strong> {{ payment.get_payment_method_display }}</p>
+                    <p><strong>နည်းလမ်း:</strong> {{ payment.payment_method|format_payment_method }}</p>
                     <p><strong>Transaction ID:</strong> {{ payment.transaction_id }}</p>
 
                     {% if payment.receipt %}

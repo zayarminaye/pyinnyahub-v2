@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load payment_filters %}
 
 {% block title %}Students - {{ course.title }}{% endblock %}
 
@@ -154,7 +155,7 @@
                                         </div>
                                     </td>
                                     <td>{{ payment.amount|floatformat:0 }} MMK</td>
-                                    <td>{{ payment.payment_method|default:"-" }}</td>
+                                    <td>{{ payment.payment_method|format_payment_method }}</td>
                                     <td><code>{{ payment.transaction_id|default:"-" }}</code></td>
                                     <td>{{ payment.created_at|date:"d/m/Y H:i" }}</td>
                                     <td>
