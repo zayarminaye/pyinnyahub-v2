@@ -6,43 +6,366 @@
 <div class="container mt-5 mb-5">
     <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Student Dashboard</h2>
 
+    <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white h-100">
                 <div class="card-body">
-                    <h5>မင်္ဂလာပါ {{ user.get_full_name }}!</h5>
-                    <p class="mb-0 text-muted">သင့်တွင် စာရင်းသွင်းထားသော သင်ခန်းစာများကို ဤနေရာတွင် တွေ့ရှိနိုင်ပါသည်။</p>
+                    <h5><i class="bi bi-book-fill"></i> သင်ခန်းစာများ</h5>
+                    <h2>{{ total_enrolled }}</h2>
+                    <small>စာရင်းသွင်းထားသော သင်ခန်းစာ စုစုပေါင်း</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h5><i class="bi bi-hourglass-split"></i> လေ့လာနေဆဲ</h5>
+                    <h2>{{ courses_in_progress }}</h2>
+                    <small>လေ့လာဆဲ သင်ခန်းစာများ</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5><i class="bi bi-check-circle-fill"></i> ပြီးစီးပြီ</h5>
+                    <h2>{{ courses_completed }}</h2>
+                    <small>ပြီးစီးပြီး သင်ခန်းစာများ</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5><i class="bi bi-clock-fill"></i> လေ့လာချိန်</h5>
+                    <h2>{{ total_learning_hours }}</h2>
+                    <small>စုစုပေါင်း လေ့လာချိन် (နာရီ)</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <h4 class="mb-3">ကျွန်ုပ်၏ သင်ခန်းစာများ</h4>
-    <div class="row">
-        {% if active_subscriptions %}
-            {% for subscription in active_subscriptions %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        {% if subscription.course.thumbnail %}
-                            <img src="{{ subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ subscription.course.title }}" style="height: 200px; object-fit: cover;">
+    <!-- Continue Learning Section -->
+    {% if continue_learning %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-play-circle-fill"></i> ဆက်လက်လေ့လာမည်</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for item in continue_learning %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-primary">
+                        {% if item.subscription.course.thumbnail %}
+                            <img src="{{ item.subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ item.subscription.course.title }}" style="height: 180px; object-fit: cover;">
                         {% else %}
-                            <img src="https://via.placeholder.com/400x200" class="card-img-top" alt="{{ subscription.course.title }}">
+                            <div class="card-img-top bg-secondary" style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-book" style="font-size: 3rem; color: white;"></i>
+                            </div>
                         {% endif %}
                         <div class="card-body">
-                            <h5 class="card-title">{{ subscription.course.title }}</h5>
-                            <p class="text-muted small">{{ subscription.course.instructor.get_full_name }}</p>
+                            <h6 class="card-title">{{ item.subscription.course.title|truncatewords:6 }}</h6>
+                            <p class="text-muted small mb-2">{{ item.subscription.course.instructor.get_full_name }}</p>
+
+                            <!-- Progress Bar -->
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">တိုးတက်မှု</small>
+                                    <small class="fw-bold text-primary">{{ item.progress_percentage }}%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.progress_percentage }}%"></div>
+                                </div>
+                            </div>
+
+                            <small class="text-muted d-block mb-2">
+                                {{ item.completed_lessons }}/{{ item.total_lessons }} သင်ခန်းပြီး
+                            </small>
+
+                            {% if item.last_progress %}
+                            <small class="text-muted d-block mb-3">
+                                <i class="bi bi-clock"></i> နောက်ဆုံးကြည့်: {{ item.last_progress.last_viewed_at|timesince }} က
+                            </small>
+                            {% endif %}
                         </div>
                         <div class="card-footer bg-transparent">
-                            <a href="{% url 'subscription_detail' subscription.id %}" class="btn btn-primary w-100">
+                            <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-primary btn-sm w-100">
                                 <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
                             </a>
                         </div>
                     </div>
                 </div>
-            {% endfor %}
-        {% else %}
-            <div class="col-12">
-                <div class="empty-state">
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Activity -->
+    {% if recent_activity %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-activity"></i> မကြာသေးမီ လေ့လာခဲ့သော သင်ခန်းစာများ</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                {% for progress in recent_activity %}
+                <div class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            {% if progress.is_completed %}
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            {% else %}
+                                <i class="bi bi-play-circle text-primary me-2"></i>
+                            {% endif %}
+                            <h6 class="mb-0">{{ progress.lesson.title }}</h6>
+                        </div>
+                        <small class="text-muted">
+                            {{ progress.lesson.section.course.title }} › {{ progress.lesson.section.title }}
+                        </small>
+                        <br>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> {{ progress.last_viewed_at|timesince }} က
+                            {% if progress.view_count > 1 %}
+                                | ကြည့်ရှုခဲ့သည် {{ progress.view_count }} ကြိမ်
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div>
+                        {% if progress.is_completed %}
+                            <span class="badge bg-success">ပြီးစီးပြီ</span>
+                        {% else %}
+                            <a href="{% url 'lesson_detail' progress.lesson.section.course.slug progress.lesson.section.id progress.lesson.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-play"></i> ဆက်ကြည့်မည်
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Courses -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ အားလုံး</h5>
+        </div>
+        <div class="card-body">
+            {% if subscriptions_with_progress %}
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                            အားလုံး ({{ total_enrolled }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab">
+                            လေ့လာနေဆဲ ({{ courses_in_progress }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                            ပြီးစီးပြီး ({{ courses_completed }})
+                        </button>
+                    </li>
+                    {% if not_started %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notstarted-tab" data-bs-toggle="tab" data-bs-target="#notstarted" type="button" role="tab">
+                            စတင်ရန် ({{ not_started|length }})
+                        </button>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- All Courses -->
+                    <div class="tab-pane fade show active" id="all" role="tabpanel">
+                        <div class="row">
+                            {% for item in subscriptions_with_progress %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100
+                                    {% if item.course_status == 'completed' %}border-success
+                                    {% elif item.course_status == 'in_progress' %}border-primary
+                                    {% endif %}">
+                                    {% if item.subscription.course.thumbnail %}
+                                        <img src="{{ item.subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ item.subscription.course.title }}" style="height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-secondary" style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-book" style="font-size: 3rem; color: white;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ item.subscription.course.title|truncatewords:8 }}</h6>
+                                        <p class="text-muted small">{{ item.subscription.course.instructor.get_full_name }}</p>
+
+                                        <!-- Progress -->
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <small class="text-muted">တိုးတက်မှု</small>
+                                                <small class="fw-bold
+                                                    {% if item.progress_percentage == 100 %}text-success
+                                                    {% elif item.progress_percentage > 0 %}text-primary
+                                                    {% else %}text-muted
+                                                    {% endif %}">
+                                                    {{ item.progress_percentage }}%
+                                                </small>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar
+                                                    {% if item.progress_percentage == 100 %}bg-success
+                                                    {% else %}bg-primary
+                                                    {% endif %}"
+                                                    role="progressbar"
+                                                    style="width: {{ item.progress_percentage }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <small class="text-muted d-block">
+                                            {{ item.completed_lessons }}/{{ item.total_lessons }} သင်ခန်းပြီး
+                                        </small>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn
+                                            {% if item.course_status == 'completed' %}btn-success
+                                            {% elif item.course_status == 'in_progress' %}btn-primary
+                                            {% else %}btn-outline-primary
+                                            {% endif %} btn-sm w-100">
+                                            {% if item.course_status == 'completed' %}
+                                                <i class="bi bi-arrow-clockwise"></i> ပြန်ကြည့်မည်
+                                            {% elif item.course_status == 'in_progress' %}
+                                                <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                                            {% else %}
+                                                <i class="bi bi-play-circle"></i> စတင်မည်
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- In Progress Courses -->
+                    <div class="tab-pane fade" id="progress" role="tabpanel">
+                        <div class="row">
+                            {% for item in subscriptions_with_progress %}
+                            {% if item.course_status == 'in_progress' %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 border-primary">
+                                    {% if item.subscription.course.thumbnail %}
+                                        <img src="{{ item.subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ item.subscription.course.title }}" style="height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-secondary" style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-book" style="font-size: 3rem; color: white;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ item.subscription.course.title|truncatewords:8 }}</h6>
+                                        <p class="text-muted small">{{ item.subscription.course.instructor.get_full_name }}</p>
+
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <small class="text-muted">တိုးတက်မှု</small>
+                                                <small class="fw-bold text-primary">{{ item.progress_percentage }}%</small>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.progress_percentage }}%"></div>
+                                            </div>
+                                        </div>
+
+                                        <small class="text-muted d-block">{{ item.completed_lessons }}/{{ item.total_lessons }} သင်ခန်းပြီး</small>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-primary btn-sm w-100">
+                                            <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Completed Courses -->
+                    <div class="tab-pane fade" id="completed" role="tabpanel">
+                        <div class="row">
+                            {% for item in subscriptions_with_progress %}
+                            {% if item.course_status == 'completed' %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 border-success">
+                                    {% if item.subscription.course.thumbnail %}
+                                        <img src="{{ item.subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ item.subscription.course.title }}" style="height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-secondary" style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-book" style="font-size: 3rem; color: white;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ item.subscription.course.title|truncatewords:8 }}</h6>
+                                        <p class="text-muted small">{{ item.subscription.course.instructor.get_full_name }}</p>
+
+                                        <div class="mb-2">
+                                            <span class="badge bg-success w-100">
+                                                <i class="bi bi-check-circle-fill"></i> ပြီးစီးပြီ
+                                            </span>
+                                        </div>
+
+                                        <small class="text-muted d-block">{{ item.total_lessons }} သင်ခန်းစာ အားလုံးပြီး</small>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-success btn-sm w-100">
+                                            <i class="bi bi-arrow-clockwise"></i> ပြန်ကြည့်မည်
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Not Started Courses -->
+                    {% if not_started %}
+                    <div class="tab-pane fade" id="notstarted" role="tabpanel">
+                        <div class="row">
+                            {% for item in not_started %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100">
+                                    {% if item.subscription.course.thumbnail %}
+                                        <img src="{{ item.subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ item.subscription.course.title }}" style="height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-secondary" style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-book" style="font-size: 3rem; color: white;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ item.subscription.course.title|truncatewords:8 }}</h6>
+                                        <p class="text-muted small">{{ item.subscription.course.instructor.get_full_name }}</p>
+
+                                        <small class="text-muted d-block">{{ item.total_lessons }} သင်ခန်းစာ</small>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <a href="{% url 'subscription_detail' item.subscription.id %}" class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="bi bi-play-circle"></i> စတင်မည်
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state py-5">
                     <div class="empty-state-icon">
                         <i class="bi bi-book"></i>
                     </div>
@@ -52,16 +375,20 @@
                         <i class="bi bi-search"></i> သင်ခန်းစာများ ရှာကြည့်မည်
                     </a>
                 </div>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 
+    <!-- Quick Actions -->
     <div class="mt-4">
         <a href="{% url 'my_subscriptions' %}" class="btn btn-outline-primary">
-            <i class="bi bi-book"></i> သင်ခန်းစာ အားလုံးကြည့်မည်
+            <i class="bi bi-book"></i> သင်ခန်းစာ စာရင်းအပြည့်အစုံ
         </a>
         <a href="{% url 'my_payments' %}" class="btn btn-outline-info">
             <i class="bi bi-credit-card"></i> ငွေပေးချေမှု မှတ်တမ်း
+        </a>
+        <a href="{% url 'course_list' %}" class="btn btn-outline-success">
+            <i class="bi bi-plus-circle"></i> သင်ခန်းစာ အသစ် ရှာမည်
         </a>
     </div>
 </div>

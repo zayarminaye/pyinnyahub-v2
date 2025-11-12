@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from .models import InstructorApplication
 from .serializers import (
@@ -315,16 +316,102 @@ def profile_view(request):
 
 @login_required
 def student_dashboard_view(request):
-    """Student dashboard - shows enrolled courses."""
+    """Student dashboard - shows enrolled courses with progress tracking."""
     from subscriptions.models import Subscription
+    from courses.models import LessonProgress, Course, Lesson
+    from django.db.models import Count, Q, Sum
 
+    # Get all active subscriptions
     active_subscriptions = Subscription.objects.filter(
         user=request.user,
         is_active=True
-    ).select_related('course', 'course__instructor')[:6]
+    ).select_related('course', 'course__instructor')
+
+    # Calculate statistics
+    total_enrolled = active_subscriptions.count()
+
+    # Get all lesson progress for user
+    all_progress = LessonProgress.objects.filter(user=request.user)
+
+    # Total learning time (in hours)
+    total_seconds = all_progress.aggregate(total=Sum('time_spent_seconds'))['total'] or 0
+    total_learning_hours = round(total_seconds / 3600, 1)
+
+    # Calculate course progress for each subscription
+    subscriptions_with_progress = []
+    courses_in_progress = 0
+    courses_completed = 0
+
+    for subscription in active_subscriptions:
+        if subscription.course:
+            # Get total lessons in course
+            total_lessons = Lesson.objects.filter(section__course=subscription.course).count()
+
+            # Get completed lessons
+            completed_lessons = LessonProgress.objects.filter(
+                user=request.user,
+                lesson__section__course=subscription.course,
+                is_completed=True
+            ).count()
+
+            # Calculate progress percentage
+            progress_percentage = 0
+            if total_lessons > 0:
+                progress_percentage = round((completed_lessons / total_lessons) * 100)
+
+            # Get last viewed lesson
+            last_progress = LessonProgress.objects.filter(
+                user=request.user,
+                lesson__section__course=subscription.course
+            ).order_by('-last_viewed_at').first()
+
+            # Determine course status
+            if progress_percentage == 100:
+                courses_completed += 1
+                course_status = 'completed'
+            elif progress_percentage > 0:
+                courses_in_progress += 1
+                course_status = 'in_progress'
+            else:
+                course_status = 'not_started'
+
+            subscriptions_with_progress.append({
+                'subscription': subscription,
+                'total_lessons': total_lessons,
+                'completed_lessons': completed_lessons,
+                'progress_percentage': progress_percentage,
+                'last_progress': last_progress,
+                'course_status': course_status,
+            })
+
+    # Sort by last activity
+    subscriptions_with_progress.sort(
+        key=lambda x: x['last_progress'].last_viewed_at if x['last_progress'] else timezone.now() - timezone.timedelta(days=365),
+        reverse=True
+    )
+
+    # Get recent learning activity (last 5 lessons viewed)
+    recent_activity = LessonProgress.objects.filter(
+        user=request.user
+    ).select_related(
+        'lesson', 'lesson__section', 'lesson__section__course'
+    ).order_by('-last_viewed_at')[:5]
+
+    # Continue learning - courses with recent activity
+    continue_learning = [s for s in subscriptions_with_progress if s['course_status'] == 'in_progress'][:3]
+
+    # Not started courses
+    not_started = [s for s in subscriptions_with_progress if s['course_status'] == 'not_started']
 
     context = {
-        'active_subscriptions': active_subscriptions,
+        'total_enrolled': total_enrolled,
+        'courses_in_progress': courses_in_progress,
+        'courses_completed': courses_completed,
+        'total_learning_hours': total_learning_hours,
+        'subscriptions_with_progress': subscriptions_with_progress,
+        'recent_activity': recent_activity,
+        'continue_learning': continue_learning,
+        'not_started': not_started,
     }
     return render(request, 'dashboards/student.html', context)
 
