@@ -120,12 +120,7 @@
     }
 
     .complete-btn {
-        position: sticky;
-        bottom: 2rem;
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-        display: block;
+        max-width: 200px;
     }
 
     @media (max-width: 768px) {
@@ -230,7 +225,7 @@
             <div class="lesson-video-container" id="lessonContentArea">
                 {% if current_lesson.content_type == 'video' %}
                     {% if current_lesson.video_file %}
-                    <video controls class="w-100" style="max-height: 500px;" id="lessonVideo">
+                    <video controls class="w-100" style="max-height: 650px; min-height: 450px;" id="lessonVideo" controlsList="nodownload">
                         <source src="{{ current_lesson.video_file.url }}" type="video/mp4">
                         Your browser does not support video playback.
                     </video>
@@ -264,15 +259,15 @@
 
             <!-- Mark Complete Button -->
             <div class="text-center mt-4">
-                <button class="btn btn-success btn-lg complete-btn"
+                <button class="btn btn-success complete-btn"
                         id="completeBtn"
                         onclick="markComplete({{ current_lesson.id }})"
                         {% if current_lesson.id in progress_dict and progress_dict|get_item:current_lesson.id|attr:'is_completed' %}disabled{% endif %}>
-                    <i class="bi bi-check-circle"></i>
+                    <i class="bi bi-check-circle me-1"></i>
                     {% if current_lesson.id in progress_dict and progress_dict|get_item:current_lesson.id|attr:'is_completed' %}
-                    Completed
+                    ပြီးပြီ
                     {% else %}
-                    Mark as Complete
+                    ပြီးပြီဟု မှတ်မည်
                     {% endif %}
                 </button>
             </div>
@@ -456,9 +451,9 @@ function createToastContainer() {
     const container = document.createElement('div');
     container.id = 'toastContainer';
     container.style.position = 'fixed';
-    container.style.top = '20px';
+    container.style.top = '80px';
     container.style.right = '20px';
-    container.style.zIndex = '9999';
+    container.style.zIndex = '1040';
     document.body.appendChild(container);
     return container;
 }
