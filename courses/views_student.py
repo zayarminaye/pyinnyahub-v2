@@ -15,18 +15,26 @@ def course_learn_view(request, course_id, lesson_id=None):
     """
     Main student learning interface with sidebar and content area.
     """
-    course = get_object_or_404(Course, id=course_id, is_published=True)
+    # Allow instructors to preview their own courses regardless of publish status
+    if request.user.role == 'instructor':
+        course = get_object_or_404(Course, id=course_id, instructor=request.user)
+        is_preview = True
+    else:
+        course = get_object_or_404(Course, id=course_id, is_published=True)
+        is_preview = False
 
-    # Check if user is enrolled
+    # Check if user is enrolled (skip for instructors previewing their own course)
     from subscriptions.models import Subscription
-    subscription = Subscription.objects.filter(
-        user=request.user,
-        course=course,
-        is_active=True
-    ).first()
+    subscription = None
+    if not is_preview:
+        subscription = Subscription.objects.filter(
+            user=request.user,
+            course=course,
+            is_active=True
+        ).first()
 
-    if not subscription or subscription.is_expired():
-        return render(request, 'courses/not_enrolled.html', {'course': course})
+        if not subscription or subscription.is_expired():
+            return render(request, 'courses/not_enrolled.html', {'course': course})
 
     # Get all sections with lessons
     sections = course.sections.prefetch_related('lessons').order_by('order')
@@ -85,6 +93,7 @@ def course_learn_view(request, course_id, lesson_id=None):
         'progress_percentage': round(progress_percentage, 1),
         'total_lessons': total_lessons,
         'completed_lessons': completed_lessons,
+        'is_preview': is_preview,
     }
 
     return render(request, 'courses/learn.html', context)

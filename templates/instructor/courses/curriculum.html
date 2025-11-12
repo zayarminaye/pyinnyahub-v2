@@ -44,6 +44,9 @@
                                 <i class="bi bi-grip-vertical me-2 text-muted"></i>
                                 <h5 class="mb-0">{{ section.title }}</h5>
                                 <span class="badge bg-secondary ms-2">{{ section.lessons.count }} lesson{{ section.lessons.count|pluralize }}</span>
+                                {% if section.total_duration > 0 %}
+                                <span class="badge bg-info ms-2"><i class="bi bi-clock"></i> {{ section.total_duration }} min</span>
+                                {% endif %}
                             </div>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary" onclick="showAddLessonModal({{ section.id }})" title="Add Lesson">
