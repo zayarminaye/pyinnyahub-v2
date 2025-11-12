@@ -710,15 +710,17 @@
                                 {% elif user.is_instructor %}
                                     <!-- Instructor Menu -->
                                     <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> ပရိုဖိုင်</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'instructor_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'instructor_dashboard' %}"><i class="bi bi-chalkboard"></i> Instructor Dashboard</a></li>
                                     <li><a class="dropdown-item" href="{% url 'instructor_courses' %}"><i class="bi bi-journal-bookmark"></i> သင်ခန်းစာများ စီမံခန့်ခွဲမည်</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'my_subscriptions' %}"><i class="bi bi-book"></i> စာရင်းသွင်းထားသော သင်ခန်းစာများ</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'student_dashboard' %}"><i class="bi bi-mortarboard"></i> Student Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'my_courses' %}"><i class="bi bi-book"></i> စာရင်းသွင်းထားသော သင်ခန်းစာများ</a></li>
                                     <li><a class="dropdown-item" href="{% url 'my_payments' %}"><i class="bi bi-credit-card"></i> ငွေပေးချေမှု မှတ်တမ်း</a></li>
                                 {% else %}
                                     <!-- Student Menu -->
                                     <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> ပရိုဖိုင်</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'my_subscriptions' %}"><i class="bi bi-book"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'student_dashboard' %}"><i class="bi bi-speedometer2"></i> Student Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'my_courses' %}"><i class="bi bi-book"></i> ကျွန်ုပ်၏ သင်ခန်းစာများ</a></li>
                                     <li><a class="dropdown-item" href="{% url 'my_payments' %}"><i class="bi bi-credit-card"></i> ငွေပေးချေမှု မှတ်တမ်း</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{% url 'apply_instructor' %}"><i class="bi bi-mortarboard"></i> ဆရာ/ဆရာမ ဖြစ်ရန် လျှောက်ထားမည်</a></li>

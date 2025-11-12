@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load payment_filters %}
 
 {% block title %}Payment Detail - {{ payment.user.get_full_name }}{% endblock %}
 
@@ -61,7 +62,7 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Payment Method:</strong></div>
-                        <div class="col-md-8">{{ payment.payment_method|default:"N/A" }}</div>
+                        <div class="col-md-8">{{ payment.payment_method|format_payment_method }}</div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Transaction ID:</strong></div>

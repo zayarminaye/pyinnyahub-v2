@@ -13,11 +13,46 @@ from payments.models import Payment
 
 @login_required
 def my_subscriptions_view(request):
-    """Display user's active and expired subscriptions."""
+    """Display user's active and expired subscriptions with progress tracking."""
+    from courses.models import LessonProgress, Lesson
+
     active_subscriptions = Subscription.objects.filter(
         user=request.user,
         is_active=True
     ).select_related('course', 'course__instructor', 'course__category')
+
+    # Calculate progress for each active subscription
+    subscriptions_with_progress = []
+    for subscription in active_subscriptions:
+        if subscription.course:
+            # Get total lessons in course
+            total_lessons = Lesson.objects.filter(section__course=subscription.course).count()
+
+            # Get completed lessons
+            completed_lessons = LessonProgress.objects.filter(
+                user=request.user,
+                lesson__section__course=subscription.course,
+                is_completed=True
+            ).count()
+
+            # Calculate progress percentage
+            progress_percentage = 0
+            if total_lessons > 0:
+                progress_percentage = round((completed_lessons / total_lessons) * 100)
+
+            # Check if any lesson has been viewed
+            has_started = LessonProgress.objects.filter(
+                user=request.user,
+                lesson__section__course=subscription.course
+            ).exists()
+
+            subscriptions_with_progress.append({
+                'subscription': subscription,
+                'progress_percentage': progress_percentage,
+                'has_started': has_started,
+                'total_lessons': total_lessons,
+                'completed_lessons': completed_lessons,
+            })
 
     expired_subscriptions = Subscription.objects.filter(
         user=request.user,
@@ -25,7 +60,7 @@ def my_subscriptions_view(request):
     ).select_related('course', 'course__instructor', 'course__category')[:10]
 
     context = {
-        'active_subscriptions': active_subscriptions,
+        'subscriptions_with_progress': subscriptions_with_progress,
         'expired_subscriptions': expired_subscriptions,
     }
     return render(request, 'subscriptions/my_subscriptions.html', context)
@@ -73,7 +108,7 @@ def subscription_detail_view(request, subscription_id):
     )
 
     course = subscription.course
-    sections = course.sections.filter(is_published=True).prefetch_related('lessons')
+    sections = course.sections.all().prefetch_related('lessons')
 
     context = {
         'subscription': subscription,

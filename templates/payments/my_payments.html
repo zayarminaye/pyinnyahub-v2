@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load payment_filters %}
 
 {% block title %}My Payments{% endblock %}
 
@@ -30,7 +31,7 @@
                                     <small class="text-muted">{{ payment.course.instructor.get_full_name }}</small>
                                 </td>
                                 <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
-                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.payment_method|format_payment_method }}</td>
                                 <td>
                                     {% if payment.status == 'pending' %}
                                         <span class="badge bg-warning">စောင့်ဆိုင်းနေဆဲ</span>

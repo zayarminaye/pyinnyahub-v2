@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load payment_filters %}
 
 {% block title %}Admin Dashboard{% endblock %}
 
@@ -34,52 +35,216 @@
         </div>
     </div>
 
-    <!-- Pending Payments -->
+    <!-- Payments Section with Tabs -->
     <div class="card mb-4">
-        <div class="card-header bg-warning text-white">
-            <h5 class="mb-0"><i class="bi bi-credit-card"></i> စောင့်ဆိုင်းနေသော ငွေပေးချေမှုများ</h5>
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-credit-card"></i> ငွေပေးချေမှုများ</h5>
         </div>
         <div class="card-body">
-            {% if pending_payments %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ကျောင်းသား</th>
-                                <th>သင်ခန်းစာ</th>
-                                <th>ငွေပမာဏ</th>
-                                <th>နည်းလမ်း</th>
-                                <th>ရက်စွဲ</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for payment in pending_payments %}
-                            <tr>
-                                <td>{{ payment.user.get_full_name }}</td>
-                                <td>{{ payment.course.title|truncatewords:5 }}</td>
-                                <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
-                                <td>{{ payment.payment_method|default:"N/A" }}</td>
-                                <td>{{ payment.created_at|date:"d/m/Y" }}</td>
-                                <td>
-                                    <a href="{% url 'admin_payment_detail' payment.id %}" class="btn btn-sm btn-outline-info">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{% url 'admin_approve_payment' payment.id %}" class="btn btn-sm btn-success">
-                                        <i class="bi bi-check"></i>
-                                    </a>
-                                    <a href="{% url 'admin_reject_payment' payment.id %}" class="btn btn-sm btn-danger">
-                                        <i class="bi bi-x"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pending-payments-tab" data-bs-toggle="tab" data-bs-target="#pending-payments" type="button" role="tab">
+                        <span class="badge bg-warning text-dark">{{ pending_payments_count }}</span> စောင့်ဆိုင်းနေဆဲ
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="all-payments-tab" data-bs-toggle="tab" data-bs-target="#all-payments" type="button" role="tab">
+                        <span class="badge bg-secondary">{{ all_payments_count }}</span> အားလုံး
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="approved-payments-tab" data-bs-toggle="tab" data-bs-target="#approved-payments" type="button" role="tab">
+                        <span class="badge bg-success">{{ approved_payments_count }}</span> အတည်ပြုပြီး
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rejected-payments-tab" data-bs-toggle="tab" data-bs-target="#rejected-payments" type="button" role="tab">
+                        <span class="badge bg-danger">{{ rejected_payments_count }}</span> ငြင်းပယ်ပြီး
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Pending Payments -->
+                <div class="tab-pane fade show active" id="pending-payments" role="tabpanel">
+                    {% if pending_payments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ကျောင်းသား</th>
+                                        <th>သင်ခန်းစာ</th>
+                                        <th>ငွေပမာဏ</th>
+                                        <th>နည်းလမ်း</th>
+                                        <th>ရက်စွဲ</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in pending_payments %}
+                                    <tr>
+                                        <td>{{ payment.user.get_full_name }}</td>
+                                        <td>{{ payment.course.title|truncatewords:5 }}</td>
+                                        <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
+                                        <td>{{ payment.payment_method|format_payment_method }}</td>
+                                        <td>{{ payment.created_at|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'admin_payment_detail' payment.id %}" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'admin_approve_payment' payment.id %}" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check"></i>
+                                            </a>
+                                            <a href="{% url 'admin_reject_payment' payment.id %}" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">စောင့်ဆိုင်းနေသော ငွေပေးချေမှု မရှိပါ</p>
+                    {% endif %}
                 </div>
-            {% else %}
-                <p class="text-muted text-center">စောင့်ဆိုင်းနေသော ငွေပေးချေမှု မရှိပါ</p>
-            {% endif %}
+
+                <!-- All Payments -->
+                <div class="tab-pane fade" id="all-payments" role="tabpanel">
+                    {% if all_payments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ကျောင်းသား</th>
+                                        <th>သင်ခန်းစာ</th>
+                                        <th>ငွေပမာဏ</th>
+                                        <th>နည်းလမ်း</th>
+                                        <th>အခြေအနေ</th>
+                                        <th>ရက်စွဲ</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in all_payments %}
+                                    <tr>
+                                        <td>{{ payment.user.get_full_name }}</td>
+                                        <td>{{ payment.course.title|truncatewords:5 }}</td>
+                                        <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
+                                        <td>{{ payment.payment_method|format_payment_method }}</td>
+                                        <td>
+                                            {% if payment.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">စောင့်ဆိုင်းနေဆဲ</span>
+                                            {% elif payment.status == 'approved' %}
+                                                <span class="badge bg-success">အတည်ပြုပြီး</span>
+                                            {% elif payment.status == 'rejected' %}
+                                                <span class="badge bg-danger">ငြင်းပယ်ပြီး</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ payment.created_at|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'admin_payment_detail' payment.id %}" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if payment.status == 'pending' %}
+                                                <a href="{% url 'admin_approve_payment' payment.id %}" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check"></i>
+                                                </a>
+                                                <a href="{% url 'admin_reject_payment' payment.id %}" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-x"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">ငွေပေးချေမှု မှတ်တမ်း မရှိပါ</p>
+                    {% endif %}
+                </div>
+
+                <!-- Approved Payments -->
+                <div class="tab-pane fade" id="approved-payments" role="tabpanel">
+                    {% if approved_payments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ကျောင်းသား</th>
+                                        <th>သင်ခန်းစာ</th>
+                                        <th>ငွေပမာဏ</th>
+                                        <th>နည်းလမ်း</th>
+                                        <th>ရက်စွဲ</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in approved_payments %}
+                                    <tr>
+                                        <td>{{ payment.user.get_full_name }}</td>
+                                        <td>{{ payment.course.title|truncatewords:5 }}</td>
+                                        <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
+                                        <td>{{ payment.payment_method|format_payment_method }}</td>
+                                        <td>{{ payment.created_at|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'admin_payment_detail' payment.id %}" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <span class="badge bg-success">အတည်ပြုပြီး</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">အတည်ပြုပြီး ငွေပေးချေမှု မရှိပါ</p>
+                    {% endif %}
+                </div>
+
+                <!-- Rejected Payments -->
+                <div class="tab-pane fade" id="rejected-payments" role="tabpanel">
+                    {% if rejected_payments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ကျောင်းသား</th>
+                                        <th>သင်ခန်းစာ</th>
+                                        <th>ငွေပမာဏ</th>
+                                        <th>နည်းလမ်း</th>
+                                        <th>ရက်စွဲ</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in rejected_payments %}
+                                    <tr>
+                                        <td>{{ payment.user.get_full_name }}</td>
+                                        <td>{{ payment.course.title|truncatewords:5 }}</td>
+                                        <td><strong>{{ payment.amount }}</strong> ကျပ်</td>
+                                        <td>{{ payment.payment_method|format_payment_method }}</td>
+                                        <td>{{ payment.created_at|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'admin_payment_detail' payment.id %}" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <span class="badge bg-danger">ငြင်းပယ်ပြီး</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">ငြင်းပယ်ပြီး ငွေပေးချေမှု မရှိပါ</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 

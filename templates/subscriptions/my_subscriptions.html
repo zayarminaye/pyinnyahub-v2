@@ -9,26 +9,41 @@
     <!-- Active Subscriptions -->
     <h5 class="mb-3">အသုံးပြုနိုင်သော သင်ခန်းစာများ</h5>
     <div class="row">
-        {% for subscription in active_subscriptions %}
+        {% for item in subscriptions_with_progress %}
             <div class="col-md-6 mb-4">
                 <div class="card h-100">
-                    {% if subscription.course.thumbnail %}
-                        <img src="{{ subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ subscription.course.title }}" style="height: 200px; object-fit: cover;">
+                    {% if item.subscription.course.thumbnail %}
+                        <img src="{{ item.subscription.course.thumbnail.url }}" class="card-img-top" alt="{{ item.subscription.course.title }}" style="height: 200px; object-fit: cover;">
                     {% else %}
-                        <img src="https://via.placeholder.com/400x200" class="card-img-top" alt="{{ subscription.course.title }}">
+                        <img src="https://via.placeholder.com/400x200" class="card-img-top" alt="{{ item.subscription.course.title }}">
                     {% endif %}
                     <div class="card-body">
                         <span class="badge bg-success mb-2">Active</span>
-                        <h5 class="card-title">{{ subscription.course.title }}</h5>
+                        <h5 class="card-title">{{ item.subscription.course.title }}</h5>
                         <p class="text-muted small">
-                            <i class="bi bi-person"></i> {{ subscription.course.instructor.get_full_name }}
+                            <i class="bi bi-person"></i> {{ item.subscription.course.instructor.get_full_name }}
                         </p>
+
+                        <!-- Progress bar if started -->
+                        {% if item.has_started %}
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">တိုးတက်မှု</small>
+                                <small class="fw-bold text-primary">{{ item.progress_percentage }}%</small>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.progress_percentage }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ item.completed_lessons }}/{{ item.total_lessons }} သင်ခန်းပြီး</small>
+                        </div>
+                        {% endif %}
+
                         <p class="text-muted small">
-                            <i class="bi bi-calendar"></i> စတင်သည့်ရက်: {{ subscription.created_at|date:"d M Y" }}
+                            <i class="bi bi-calendar"></i> စတင်သည့်ရက်: {{ item.subscription.created_at|date:"d M Y" }}
                         </p>
-                        {% if subscription.expires_at %}
+                        {% if item.subscription.expires_at %}
                             <p class="text-muted small">
-                                <i class="bi bi-calendar-x"></i> သက်တမ်းကုန်မည်: {{ subscription.expires_at|date:"d M Y" }}
+                                <i class="bi bi-calendar-x"></i> သက်တမ်းကုန်မည်: {{ item.subscription.expires_at|date:"d M Y" }}
                             </p>
                         {% else %}
                             <p class="text-success small">
@@ -37,11 +52,14 @@
                         {% endif %}
                     </div>
                     <div class="card-footer bg-transparent">
-                        <a href="{% url 'subscription_detail' subscription.id %}" class="btn btn-primary w-100">
-                            <i class="bi bi-play-circle"></i> သင်ခန်းစာ ဆက်လက်လေ့လာမည်
+                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary w-100">
+                            {% if item.has_started %}
+                                <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                            {% else %}
+                                <i class="bi bi-play-circle-fill"></i> သင်ခန်းစာ စတင်မည်
+                            {% endif %}
                         </a>
-                    </div>
-                </div>
+                    </div>                </div>
             </div>
         {% empty %}
             <div class="col-12">
