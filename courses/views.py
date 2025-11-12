@@ -33,9 +33,19 @@ def course_list_view(request):
     if query:
         courses = courses.filter(title__icontains=query)
 
+    # Check enrollment status for authenticated users
+    enrolled_course_ids = []
+    if request.user.is_authenticated:
+        from subscriptions.models import Subscription
+        enrolled_course_ids = list(Subscription.objects.filter(
+            user=request.user,
+            is_active=True
+        ).values_list('course_id', flat=True))
+
     context = {
         'courses': courses,
         'categories': categories,
+        'enrolled_course_ids': enrolled_course_ids,
     }
     return render(request, 'courses/list.html', context)
 

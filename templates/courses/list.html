@@ -54,7 +54,13 @@
                         </div>
                     </div>
                     <div class="card-footer bg-transparent">
-                        <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary w-100">အသေးစိတ်</a>
+                        {% if course.id in enrolled_course_ids %}
+                            <a href="{% url 'course_learn' course.id %}" class="btn btn-success w-100">
+                                <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                            </a>
+                        {% else %}
+                            <a href="{% url 'course_detail' course.slug %}" class="btn btn-primary w-100">အသေးစိတ်</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
