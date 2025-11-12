@@ -82,13 +82,13 @@ class NotificationService:
         )
 
         try:
-            # Send email
+            # Send email with timeout protection
             send_mail(
                 subject=subject,
                 message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[recipient],
-                fail_silently=False,
+                fail_silently=True,  # Don't block admin operations if email fails
             )
 
             # Mark as sent
