@@ -618,15 +618,26 @@ def section_reorder_ajax(request, course_id):
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
 
     try:
+        from django.db import transaction
         data = json.loads(request.body)
         section_ids = data.get('section_ids', [])
 
-        # Update order for each section
-        for index, section_id in enumerate(section_ids):
-            Section.objects.filter(id=section_id, course=course).update(order=index)
+        # Use atomic transaction and temporary negative values to avoid unique constraint violations
+        with transaction.atomic():
+            # First, set all sections to negative orders
+            for section in Section.objects.filter(id__in=section_ids, course=course):
+                section.order = -section.id
+                section.save()
+
+            # Then update to final order
+            for index, section_id in enumerate(section_ids):
+                Section.objects.filter(id=section_id, course=course).update(order=index)
 
         return JsonResponse({'success': True})
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error reordering sections: {str(e)}", exc_info=True)
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -839,6 +850,7 @@ def lesson_reorder_ajax(request, course_id, section_id):
     section = get_object_or_404(Section, id=section_id, course=course)
 
     try:
+        from django.db import transaction
         # Parse JSON data
         data = json.loads(request.body)
         lesson_ids = data.get('lesson_ids', [])
@@ -852,9 +864,16 @@ def lesson_reorder_ajax(request, course_id, section_id):
             if int(lesson_id) not in existing_lessons:
                 return JsonResponse({'success': False, 'error': f'Invalid lesson ID: {lesson_id}'}, status=400)
 
-        # Update order for each lesson
-        for index, lesson_id in enumerate(lesson_ids):
-            Lesson.objects.filter(id=lesson_id, section=section).update(order=index)
+        # Use atomic transaction and temporary negative values to avoid unique constraint violations
+        with transaction.atomic():
+            # First, set all lessons to negative orders
+            for lesson in Lesson.objects.filter(id__in=lesson_ids, section=section):
+                lesson.order = -lesson.id
+                lesson.save()
+
+            # Then update to final order
+            for index, lesson_id in enumerate(lesson_ids):
+                Lesson.objects.filter(id=lesson_id, section=section).update(order=index)
 
         return JsonResponse({'success': True})
     except json.JSONDecodeError as e:
