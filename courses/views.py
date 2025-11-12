@@ -394,17 +394,17 @@ def course_edit_view(request, course_id):
             resubmit = request.POST.get('resubmit_for_review') == 'true'
 
             # Save the course
-            course = form.save(commit=False)
+            course = form.save()
 
             # If resubmitting a rejected course, change status to pending
             if resubmit and course.status == 'rejected':
                 course.status = 'pending'
                 course.rejection_reason = None
+                course.save()
                 messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို ပြုပြင်ပြီး Admin သုံးသပ်ရန် ပြန်လည်တင်သွင်းပြီးပါပြီ။')
             else:
                 messages.success(request, f'သင်ခန်းစာ "{course.title}" ကို အောင်မြင်စွာ ပြုပြင်ပြီးပါပြီ။')
 
-            course.save()
             return redirect('instructor_courses')
     else:
         form = CourseEditForm(instance=course)

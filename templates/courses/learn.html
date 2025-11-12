@@ -193,14 +193,16 @@
                         {% endif %}
                     </div>
                     <div class="lesson-info">
-                        <p class="lesson-title">{{ lesson.title }}</p>
+                        <p class="lesson-title">
+                            <i class="bi bi-{% if lesson.content_type == 'video' %}play-circle{% elif lesson.content_type == 'text' %}file-text{% elif lesson.content_type == 'quiz' %}question-circle{% else %}file-earmark{% endif %} me-1"></i>
+                            {{ lesson.title }}
+                        </p>
                         {% if lesson.duration_minutes %}
                         <p class="lesson-duration">
                             <i class="bi bi-clock"></i> {{ lesson.duration_minutes }} min
                         </p>
                         {% endif %}
                     </div>
-                    <i class="bi bi-{{ lesson.content_type }} text-muted"></i>
                 </div>
                 {% empty %}
                 <div class="text-center text-muted p-3">

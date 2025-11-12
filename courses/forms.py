@@ -204,14 +204,10 @@ class CourseEditForm(forms.ModelForm):
         instance.what_you_will_learn = self.cleaned_data['what_you_will_learn_text']
         instance.requirements = self.cleaned_data['requirements_text']
 
-        # Ensure file fields are saved properly
-        if 'thumbnail' in self.cleaned_data and self.cleaned_data['thumbnail']:
-            instance.thumbnail = self.cleaned_data['thumbnail']
-        if 'promo_video' in self.cleaned_data and self.cleaned_data['promo_video']:
-            instance.promo_video = self.cleaned_data['promo_video']
-
         if commit:
             instance.save()
+            # Save many-to-many data (if any)
+            self.save_m2m()
         return instance
 
 
