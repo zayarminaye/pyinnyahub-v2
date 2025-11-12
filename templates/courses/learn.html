@@ -265,9 +265,9 @@
                         {% if current_lesson.id in progress_dict and progress_dict|get_item:current_lesson.id|attr:'is_completed' %}disabled{% endif %}>
                     <i class="bi bi-check-circle me-1"></i>
                     {% if current_lesson.id in progress_dict and progress_dict|get_item:current_lesson.id|attr:'is_completed' %}
-                    ပြီးပြီ
+                    {{ msg_btn_completed|default:"ပြီးပြီ" }}
                     {% else %}
-                    ပြီးပြီဟု မှတ်မည်
+                    {{ msg_btn_mark_complete|default:"ပြီးပြီဟု မှတ်မည်" }}
                     {% endif %}
                 </button>
             </div>

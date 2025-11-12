@@ -92,9 +92,9 @@
                         {% if is_enrolled %}
                             <a href="{% url 'course_learn' course.id %}" class="btn btn-success w-100 mb-2">
                                 {% if has_started %}
-                                    <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                                    <i class="bi bi-play-circle"></i> {{ msg_btn_continue_learning|default:"ဆက်လက်လေ့လာမည်" }}
                                 {% else %}
-                                    <i class="bi bi-play-circle-fill"></i> သင်ခန်းစာ စတင်မည်
+                                    <i class="bi bi-play-circle-fill"></i> {{ msg_btn_start_learning|default:"သင်ခန်းစာ စတင်မည်" }}
                                 {% endif %}
                             </a>
                             <a href="{% url 'subscription_detail' active_subscription.id %}" class="btn btn-outline-secondary w-100 mb-2">

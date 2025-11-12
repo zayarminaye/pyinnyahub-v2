@@ -52,11 +52,13 @@
                         {% endif %}
                     </div>
                     <div class="card-footer bg-transparent">
-                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary w-100">
-                            {% if item.has_started %}
-                                <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                        <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn {% if item.progress_percentage == 100 %}btn-success{% else %}btn-primary{% endif %} w-100">
+                            {% if item.progress_percentage == 100 %}
+                                <i class="bi bi-arrow-clockwise"></i> {{ msg_btn_review_course|default:"ပြန်ကြည့်မည်" }}
+                            {% elif item.has_started %}
+                                <i class="bi bi-play-circle"></i> {{ msg_btn_continue_learning|default:"ဆက်လက်လေ့လာမည်" }}
                             {% else %}
-                                <i class="bi bi-play-circle-fill"></i> သင်ခန်းစာ စတင်မည်
+                                <i class="bi bi-play-circle-fill"></i> {{ msg_btn_start_learning|default:"သင်ခန်းစာ စတင်မည်" }}
                             {% endif %}
                         </a>
                     </div>                </div>
