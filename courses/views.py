@@ -10,7 +10,7 @@ from django.utils.text import slugify
 from django.db import models
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Course, Category, Section, Lesson
+from .models import Course, Category, Section, Lesson, LessonProgress
 from .decorators import instructor_required, owns_course
 from .forms import (
     CourseBasicInfoForm, CourseDetailsForm, CourseMediaForm,
@@ -792,7 +792,10 @@ def lesson_reorder_ajax(request, course_id, section_id):
 
         return JsonResponse({'success': True})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error reordering lessons: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'error': 'Lesson reorder မအောင်မြင်ပါ။ / Failed to reorder lessons.'}, status=500)
 
 
 @login_required
