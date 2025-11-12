@@ -142,10 +142,12 @@ def home_view(request):
     from courses.models import Course, Category
 
     featured_courses = Course.objects.published().filter(is_featured=True)[:6]
-    categories = Category.objects.filter(is_active=True)[:6]
+    recent_courses = Course.objects.published().order_by('-created_at')[:8]
+    categories = Category.objects.filter(is_active=True)[:8]
 
     context = {
         'featured_courses': featured_courses,
+        'recent_courses': recent_courses,
         'categories': categories,
     }
     return render(request, 'home.html', context)
