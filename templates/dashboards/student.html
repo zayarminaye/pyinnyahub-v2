@@ -91,7 +91,7 @@
                         </div>
                         <div class="card-footer bg-transparent">
                             <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary btn-sm w-100">
-                                <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                                <i class="bi bi-play-circle"></i> {{ msg_btn_continue_learning|default:"ဆက်လက်လေ့လာမည်" }}
                             </a>
                         </div>
                     </div>
@@ -137,7 +137,7 @@
                             <span class="badge bg-success">ပြီးစီးပြီ</span>
                         {% else %}
                             <a href="{% url 'course_learn_lesson' progress.lesson.section.course.id progress.lesson.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-play"></i> ဆက်ကြည့်မည်
+                                <i class="bi bi-play"></i> {{ msg_btn_continue_watching|default:"ဆက်ကြည့်မည်" }}
                             </a>
                         {% endif %}
                     </div>
@@ -237,11 +237,11 @@
                                             {% else %}btn-outline-primary
                                             {% endif %} btn-sm w-100">
                                             {% if item.course_status == 'completed' %}
-                                                <i class="bi bi-arrow-clockwise"></i> ပြန်ကြည့်မည်
+                                                <i class="bi bi-arrow-clockwise"></i> {{ msg_btn_review_course|default:"ပြန်ကြည့်မည်" }}
                                             {% elif item.course_status == 'in_progress' %}
-                                                <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                                                <i class="bi bi-play-circle"></i> {{ msg_btn_continue_learning|default:"ဆက်လက်လေ့လာမည်" }}
                                             {% else %}
-                                                <i class="bi bi-play-circle"></i> စတင်မည်
+                                                <i class="bi bi-play-circle"></i> {{ msg_btn_start_learning|default:"စတင်မည်" }}
                                             {% endif %}
                                         </a>
                                     </div>
@@ -283,7 +283,7 @@
                                     </div>
                                     <div class="card-footer bg-transparent">
                                         <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-primary btn-sm w-100">
-                                            <i class="bi bi-play-circle"></i> ဆက်လက်လေ့လာမည်
+                                            <i class="bi bi-play-circle"></i> {{ msg_btn_continue_learning|default:"ဆက်လက်လေ့လာမည်" }}
                                         </a>
                                     </div>
                                 </div>
@@ -321,7 +321,7 @@
                                     </div>
                                     <div class="card-footer bg-transparent">
                                         <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-success btn-sm w-100">
-                                            <i class="bi bi-arrow-clockwise"></i> ပြန်ကြည့်မည်
+                                            <i class="bi bi-arrow-clockwise"></i> {{ msg_btn_review_course|default:"ပြန်ကြည့်မည်" }}
                                         </a>
                                     </div>
                                 </div>
@@ -353,7 +353,7 @@
                                     </div>
                                     <div class="card-footer bg-transparent">
                                         <a href="{% url 'course_learn' item.subscription.course.id %}" class="btn btn-outline-primary btn-sm w-100">
-                                            <i class="bi bi-play-circle"></i> စတင်မည်
+                                            <i class="bi bi-play-circle"></i> {{ msg_btn_start_learning|default:"စတင်မည်" }}
                                         </a>
                                     </div>
                                 </div>
