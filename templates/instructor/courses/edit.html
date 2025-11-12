@@ -180,14 +180,17 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Thumbnail <span class="text-danger">*</span></label>
-                                {% if course.thumbnail %}
-                                    <div class="mb-2">
+                                <div id="thumbnailPreviewContainer" class="mb-2">
+                                    {% if course.thumbnail %}
                                         <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}"
-                                             class="img-thumbnail" style="max-width: 300px;">
-                                        <p class="small text-muted mb-0 mt-1">Current thumbnail</p>
-                                    </div>
-                                {% endif %}
-                                {{ form.thumbnail }}
+                                             id="thumbnailPreview" class="img-thumbnail" style="max-width: 300px; display: block;">
+                                        <p class="small text-muted mb-0 mt-1" id="thumbnailLabel">Current thumbnail</p>
+                                    {% else %}
+                                        <img id="thumbnailPreview" class="img-thumbnail" style="max-width: 300px; display: none;">
+                                        <p class="small text-muted mb-0 mt-1" id="thumbnailLabel" style="display: none;"></p>
+                                    {% endif %}
+                                </div>
+                                <input type="file" name="thumbnail" accept="image/*" class="form-control" id="id_thumbnail" onchange="previewThumbnail(this)">
                                 <small class="form-text text-muted d-block">Upload new image to replace (min 800x450px, max 5MB)</small>
                                 {% if form.thumbnail.errors %}
                                     <div class="text-danger small">{{ form.thumbnail.errors.0 }}</div>
@@ -196,15 +199,19 @@
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Promotional Video</label>
-                                {% if course.promo_video %}
-                                    <div class="mb-2">
-                                        <video controls style="max-width: 300px;" class="border rounded">
+                                <div id="videoPreviewContainer" class="mb-2">
+                                    {% if course.promo_video %}
+                                        <video controls style="max-width: 300px;" class="border rounded" id="videoPreview">
                                             <source src="{{ course.promo_video.url }}" type="video/mp4">
                                         </video>
-                                        <p class="small text-muted mb-0 mt-1">Current promo video</p>
-                                    </div>
-                                {% endif %}
-                                {{ form.promo_video }}
+                                        <p class="small text-muted mb-0 mt-1" id="videoLabel">Current promo video</p>
+                                    {% else %}
+                                        <video controls style="max-width: 300px; display: none;" class="border rounded" id="videoPreview">
+                                        </video>
+                                        <p class="small text-muted mb-0 mt-1" id="videoLabel" style="display: none;"></p>
+                                    {% endif %}
+                                </div>
+                                <input type="file" name="promo_video" accept="video/*" class="form-control" id="id_promo_video" onchange="previewVideo(this)">
                                 <small class="form-text text-muted d-block">Upload new video to replace (max 500MB, MP4/WEBM)</small>
                                 {% if form.promo_video.errors %}
                                     <div class="text-danger small">{{ form.promo_video.errors.0 }}</div>
@@ -260,4 +267,40 @@
         </div>
     </div>
 </div>
+
+<script>
+function previewThumbnail(input) {
+    const preview = document.getElementById('thumbnailPreview');
+    const label = document.getElementById('thumbnailLabel');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            label.textContent = 'New thumbnail (not saved yet)';
+            label.style.display = 'block';
+        };
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function previewVideo(input) {
+    const preview = document.getElementById('videoPreview');
+    const label = document.getElementById('videoLabel');
+
+    if (input.files && input.files[0]) {
+        const fileURL = URL.createObjectURL(input.files[0]);
+
+        preview.src = fileURL;
+        preview.style.display = 'block';
+        label.textContent = 'New promo video (not saved yet)';
+        label.style.display = 'block';
+
+        preview.load();
+    }
+}
+</script>
 {% endblock %}
