@@ -171,6 +171,10 @@ class CourseEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
+            # Make file fields optional when editing (not changing them)
+            self.fields['thumbnail'].required = False
+            self.fields['promo_video'].required = False
+
             # Convert JSON arrays to text for display
             if self.instance.what_you_will_learn:
                 self.fields['what_you_will_learn_text'].initial = '\n'.join(
