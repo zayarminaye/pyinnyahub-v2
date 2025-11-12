@@ -3,6 +3,7 @@ Notification service for Pyinnya Hub LMS.
 Centralized service for sending email and in-app notifications.
 """
 import logging
+import threading
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -60,6 +61,7 @@ class NotificationService:
     def _send_email(recipient, subject, message, email_type=None, user=None):
         """
         Internal method to send email and log it.
+        Sends email in background thread to avoid blocking admin operations.
 
         Args:
             recipient: Email address
@@ -69,7 +71,7 @@ class NotificationService:
             user: User object (optional)
 
         Returns:
-            bool: True if sent successfully, False otherwise
+            bool: True if queued successfully
         """
         # Create email log
         email_log = EmailLog.objects.create(
@@ -81,26 +83,28 @@ class NotificationService:
             status='pending'
         )
 
-        try:
-            # Send email
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipient],
-                fail_silently=False,
-            )
+        def send_in_background():
+            """Send email in background thread."""
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[recipient],
+                    fail_silently=True,
+                )
+                email_log.mark_as_sent()
+                logger.info(f"Email sent to {recipient}: {subject}")
+            except Exception as e:
+                email_log.mark_as_failed(str(e))
+                logger.error(f"Failed to send email to {recipient}: {str(e)}")
 
-            # Mark as sent
-            email_log.mark_as_sent()
-            logger.info(f"Email sent to {recipient}: {subject}")
-            return True
+        # Start background thread for email sending
+        thread = threading.Thread(target=send_in_background, daemon=True)
+        thread.start()
 
-        except Exception as e:
-            # Mark as failed
-            email_log.mark_as_failed(str(e))
-            logger.error(f"Failed to send email to {recipient}: {str(e)}")
-            return False
+        logger.info(f"Email queued for {recipient}: {subject}")
+        return True
 
     @staticmethod
     def _create_notification(user, notification_type, title, message, related_object_type=None, related_object_id=None):
