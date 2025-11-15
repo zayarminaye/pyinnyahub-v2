@@ -6,6 +6,7 @@ from django.db import models
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from django.conf import settings
+from cloudinary.models import CloudinaryField
 from core.models import TimeStampedModel, SoftDeleteModel, PublishableModel
 from core.utils import (
     generate_unique_filename,
@@ -112,16 +113,19 @@ class Course(SoftDeleteModel, PublishableModel):
     tags = models.ManyToManyField(Tag, blank=True, related_name='courses')
 
     # Media
-    thumbnail = models.ImageField(
-        upload_to=generate_unique_filename,
-        validators=[validate_course_thumbnail],
+    thumbnail = CloudinaryField(
+        'image',
+        blank=False,
+        null=False,
+        folder='courses/thumbnails',
         help_text='Course thumbnail image (min 800x450px, max 5MB, will be optimized)'
     )
-    promo_video = models.FileField(
-        upload_to=generate_unique_filename,
+    promo_video = CloudinaryField(
+        'video',
         blank=True,
         null=True,
-        validators=[validate_lesson_video],
+        resource_type='video',
+        folder='courses/promos',
         help_text='Promotional video (max 500MB, MP4/WEBM)'
     )
 
@@ -401,11 +405,12 @@ class Lesson(TimeStampedModel):
     # Content
     description = models.TextField(blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text='External video URL (YouTube, Vimeo, etc.)')
-    video_file = models.FileField(
-        upload_to=generate_unique_filename,
+    video_file = CloudinaryField(
+        'video',
         blank=True,
         null=True,
-        validators=[validate_lesson_video],
+        resource_type='video',
+        folder='lessons/videos',
         help_text='Upload video file (max 500MB, MP4/WEBM/MOV)'
     )
     text_content = models.TextField(blank=True, null=True, help_text='Markdown or HTML content')
@@ -466,9 +471,12 @@ class LessonAttachment(TimeStampedModel):
     """
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='lesson_attachments')
     title = models.CharField(max_length=255)
-    file = models.FileField(
-        upload_to=generate_unique_filename,
-        validators=[validate_lesson_attachment],
+    file = CloudinaryField(
+        'raw',
+        blank=False,
+        null=False,
+        resource_type='raw',
+        folder='lessons/attachments',
         help_text='Lesson attachment (max 50MB, PDF/DOC/PPT/ZIP)'
     )
     file_size = models.PositiveIntegerField(help_text='File size in bytes')
