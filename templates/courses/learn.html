@@ -226,7 +226,7 @@
                 {% if current_lesson.content_type == 'video' %}
                     {% if current_lesson.video_file %}
                     <video controls class="w-100" style="max-height: 650px; min-height: 450px;" id="lessonVideo" controlsList="nodownload">
-                        <source src="{{ current_lesson.video_file.url }}" type="video/mp4">
+                        <source src="{{ current_lesson.get_video_url }}" type="video/mp4">
                         Your browser does not support video playback.
                     </video>
                     {% elif current_lesson.video_url %}

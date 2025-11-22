@@ -6,7 +6,6 @@ from django.db import models
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from django.conf import settings
-from cloudinary.models import CloudinaryField
 from core.models import TimeStampedModel, SoftDeleteModel, PublishableModel
 from core.utils import (
     generate_unique_filename,
@@ -113,19 +112,16 @@ class Course(SoftDeleteModel, PublishableModel):
     tags = models.ManyToManyField(Tag, blank=True, related_name='courses')
 
     # Media
-    thumbnail = CloudinaryField(
-        'image',
-        blank=False,
-        null=False,
-        folder='courses/thumbnails',
+    thumbnail = models.ImageField(
+        upload_to=generate_unique_filename,
+        validators=[validate_course_thumbnail],
         help_text='Course thumbnail image (min 800x450px, max 5MB, will be optimized)'
     )
-    promo_video = CloudinaryField(
-        'video',
+    promo_video = models.FileField(
+        upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        resource_type='video',
-        folder='courses/promos',
+        validators=[validate_lesson_video],
         help_text='Promotional video (max 500MB, MP4/WEBM)'
     )
 
@@ -405,12 +401,11 @@ class Lesson(TimeStampedModel):
     # Content
     description = models.TextField(blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text='External video URL (YouTube, Vimeo, etc.)')
-    video_file = CloudinaryField(
-        'video',
+    video_file = models.FileField(
+        upload_to=generate_unique_filename,
         blank=True,
         null=True,
-        resource_type='video',
-        folder='lessons/videos',
+        validators=[validate_lesson_video],
         help_text='Upload video file (max 500MB, MP4/WEBM/MOV)'
     )
     text_content = models.TextField(blank=True, null=True, help_text='Markdown or HTML content')
@@ -464,6 +459,19 @@ class Lesson(TimeStampedModel):
         """Get the course this lesson belongs to."""
         return self.section.course
 
+    def get_video_url(self):
+        """Get the correct Cloudinary video URL."""
+        if not self.video_file:
+            return None
+
+        video_url = self.video_file.url
+
+        # Fix Cloudinary URL: change /image/upload/ to /video/upload/
+        if 'cloudinary.com' in video_url and '/image/upload/' in video_url:
+            video_url = video_url.replace('/image/upload/', '/video/upload/')
+
+        return video_url
+
 
 class LessonAttachment(TimeStampedModel):
     """
@@ -471,12 +479,9 @@ class LessonAttachment(TimeStampedModel):
     """
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='lesson_attachments')
     title = models.CharField(max_length=255)
-    file = CloudinaryField(
-        'raw',
-        blank=False,
-        null=False,
-        resource_type='raw',
-        folder='lessons/attachments',
+    file = models.FileField(
+        upload_to=generate_unique_filename,
+        validators=[validate_lesson_attachment],
         help_text='Lesson attachment (max 50MB, PDF/DOC/PPT/ZIP)'
     )
     file_size = models.PositiveIntegerField(help_text='File size in bytes')

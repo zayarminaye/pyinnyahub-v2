@@ -136,9 +136,10 @@ def lesson_get_content_ajax(request, lesson_id):
     content_html = ''
     if lesson.content_type == 'video':
         if lesson.video_file:
+            video_url = lesson.get_video_url()
             content_html = f'''
                 <video controls class="w-100" style="max-height: 650px; min-height: 450px;" id="lessonVideo" controlsList="nodownload">
-                    <source src="{lesson.video_file.url}" type="video/mp4">
+                    <source src="{video_url}" type="video/mp4">
                     Your browser does not support video playback.
                 </video>
             '''
